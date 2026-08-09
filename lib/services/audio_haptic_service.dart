@@ -1,12 +1,9 @@
 import 'package:flutter/services.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:vibration/vibration.dart';
 
 class AudioHapticService {
   static final AudioHapticService instance = AudioHapticService._internal();
   AudioHapticService._internal();
-
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   /// Play reminder chime tone
   Future<void> playNotificationTone(String toneName) async {

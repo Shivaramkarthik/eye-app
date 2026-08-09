@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.specz.app.specz_co"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

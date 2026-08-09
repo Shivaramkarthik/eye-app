@@ -52,6 +52,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
 
     final result = await AiOcrService.instance.extractPrescriptionData("mock_image.jpg");
 
+    if (!mounted) return;
     setState(() {
       isOcrProcessing = false;
       if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
@@ -106,6 +107,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     );
 
     await DatabaseService.instance.insertPrescription(prescription);
+    if (!mounted) return;
     widget.onSaved();
     Navigator.pop(context);
   }
@@ -134,8 +136,10 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
         createdAt: DateTime.now().toIso8601String(),
       );
       await DatabaseService.instance.insertPrescription(batchPresc);
+      if (!mounted) return;
       setState(() => uploadQueueCount = 10 - i);
     }
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Processed 10 consecutive prescription uploads smoothly!")),
     );

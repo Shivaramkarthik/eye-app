@@ -118,7 +118,7 @@ class AiOcrService {
 
     score = score.clamp(15, 98);
 
-    String explanation = "Score of $score/100 generated because: " + reasons.join(" ");
+    String explanation = "Score of $score/100 generated because: ${reasons.join(" ")}";
 
     return {
       'score': score,

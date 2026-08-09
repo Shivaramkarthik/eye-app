@@ -68,6 +68,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
 
     await DatabaseService.instance.insertMedicine(med);
     _nameController.clear();
+    if (!mounted) return;
     Navigator.pop(context); // close modal
     _loadMedicines();
     widget.onUpdated();

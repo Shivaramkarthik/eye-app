@@ -107,6 +107,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _handleAddProfileRequested() async {
     bool canCreate = await EntitlementService.instance.canCreateProfile(currentUser);
+    if (!mounted) return;
     if (!canCreate) {
       _navigateToUpgrade();
     } else {

@@ -56,6 +56,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
 
     await DatabaseService.instance.updateProfile(updated);
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("Profile details updated successfully!")),
     );
@@ -93,6 +94,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               onPressed: () async {
                 Navigator.pop(ctx);
                 await DatabaseService.instance.deleteProfileCascade(widget.profile.id);
+                if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Profile '${widget.profile.name}' deleted. Slot freed immediately.")),
                 );

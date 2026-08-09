@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
@@ -317,7 +318,7 @@ class DatabaseService {
       } else {
         logs.add(logKey);
       }
-      await db.update('medicines', {'completedLogs': logs.toString()}, where: 'id = ?', whereArgs: [medicineId]);
+      await db.update('medicines', {'completedLogs': jsonEncode(logs)}, where: 'id = ?', whereArgs: [medicineId]);
     }
   }
 }

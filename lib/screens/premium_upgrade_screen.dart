@@ -30,6 +30,7 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
       planId: 'specz_plus_99',
     );
 
+    if (!mounted) return;
     setState(() => isProcessing = false);
 
     if (success) {
