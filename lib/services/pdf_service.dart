@@ -23,8 +23,15 @@ class PdfService {
   }) async {
     final pdf = pw.Document();
 
-    final font = await PdfGoogleFonts.interRegular();
-    final fontBold = await PdfGoogleFonts.interBold();
+    pw.Font font = pw.Font.helvetica();
+    pw.Font fontBold = pw.Font.helveticaBold();
+    try {
+      font = await PdfGoogleFonts.interRegular();
+      fontBold = await PdfGoogleFonts.interBold();
+    } catch (_) {
+      font = pw.Font.helvetica();
+      fontBold = pw.Font.helveticaBold();
+    }
 
     final latestPrescription = prescriptions.isNotEmpty ? prescriptions.first : null;
 

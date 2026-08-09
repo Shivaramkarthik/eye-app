@@ -222,12 +222,12 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
   }
 
   Future<void> _savePrescription() async {
-    double? rSph = double.tryParse(_rightSphController.text);
-    double? rCyl = double.tryParse(_rightCylController.text);
-    double? lSph = double.tryParse(_leftSphController.text);
-    double? lCyl = double.tryParse(_leftCylController.text);
+    double? rSph = double.tryParse(_rightSphController.text.trim());
+    double rCyl = double.tryParse(_rightCylController.text.trim()) ?? 0.0;
+    double? lSph = double.tryParse(_leftSphController.text.trim());
+    double lCyl = double.tryParse(_leftCylController.text.trim()) ?? 0.0;
 
-    if (rSph == null || rCyl == null || lSph == null || lCyl == null) {
+    if (rSph == null || lSph == null) {
       setState(() => showWarning = true);
       return;
     }
