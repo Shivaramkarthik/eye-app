@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
-
-
-
+import '../utils/app_theme.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
 
@@ -31,139 +29,168 @@ class ProfileSwitcherBar extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-
+        // Header row
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Row(
               children: [
-                const Icon(LucideIcons.users, size: 16, color: Color(0xFF475569)),
-                const SizedBox(width: 6),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(LucideIcons.users, size: 14, color: AppTheme.primary),
+                ),
+                const SizedBox(width: 8),
                 Text(
-                  "$activeCount of $maxCapacity profiles used",
+                  "$activeCount of $maxCapacity profiles",
                   style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF475569),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
               ],
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: user.isPlusActive ? const Color(0xFFEFF6FF) : const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: user.isPlusActive ? const Color(0xFFBFDBFE) : const Color(0xFFE2E8F0),
-                ),
+                gradient: user.isPlusActive ? AppTheme.warmGradient : null,
+                color: user.isPlusActive ? null : AppTheme.surface,
+                borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                user.isPlusActive ? "Specz Plus" : "Free Plan",
+                user.isPlusActive ? "✨ Specz Plus" : "Free Plan",
                 style: TextStyle(
                   fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  color: user.isPlusActive ? const Color(0xFF1D4ED8) : const Color(0xFF64748B),
+                  fontWeight: FontWeight.w700,
+                  color: user.isPlusActive ? Colors.white : AppTheme.textSecondary,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        // Profile chips
         SizedBox(
-          height: 68,
+          height: 72,
           child: ListView(
             scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
             children: [
               ...profiles.map((profile) {
                 bool isSelected = selectedProfile?.id == profile.id;
-                return GestureDetector(
-                  onTap: () => onSelectProfile(profile),
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF0284C7) : Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected ? const Color(0xFF0284C7) : const Color(0xFFE2E8F0),
-                        width: isSelected ? 1.5 : 1,
+                return Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: GestureDetector(
+                    onTap: () => onSelectProfile(profile),
+                    child: AnimatedContainer(
+                      duration: AppTheme.animFast,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: isSelected ? AppTheme.primaryGradient : null,
+                        color: isSelected ? null : Colors.white,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                        boxShadow: isSelected ? AppTheme.primaryShadow : AppTheme.softShadow,
+                        border: isSelected ? null : Border.all(color: AppTheme.border),
                       ),
-                      boxShadow: isSelected
-                          ? [
-                              BoxShadow(
-                                color: const Color(0xFF0284C7).withOpacity(0.25),
-                                blurRadius: 8,
-                                offset: const Offset(0, 3),
-                              )
-                            ]
-                          : [],
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: isSelected ? Colors.white.withOpacity(0.2) : const Color(0xFFE0F2FE),
-                          child: Icon(
-                            profile.type == 'Child' ? LucideIcons.baby : LucideIcons.user,
-                            size: 18,
-                            color: isSelected ? Colors.white : const Color(0xFF0284C7),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: isSelected
+                                  ? Colors.white.withOpacity(0.2)
+                                  : AppTheme.primary.withOpacity(0.1),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.white.withOpacity(0.4)
+                                    : AppTheme.primary.withOpacity(0.2),
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Icon(
+                              profile.type == 'Child' ? LucideIcons.baby : LucideIcons.user,
+                              size: 18,
+                              color: isSelected ? Colors.white : AppTheme.primary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-
-                            Text(
-                              profile.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                                color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                          const SizedBox(width: 10),
+                          Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                profile.name,
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSelected ? Colors.white : AppTheme.textPrimary,
+                                ),
                               ),
-                            ),
-                            Text(
-                              "${profile.relationship} (${profile.type})",
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: isSelected ? Colors.white.withOpacity(0.85) : const Color(0xFF64748B),
+                              const SizedBox(height: 2),
+                              Text(
+                                "${profile.relationship} · ${profile.type}",
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: isSelected
+                                      ? Colors.white.withOpacity(0.8)
+                                      : AppTheme.textSecondary,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               }),
+              // Add profile button
               GestureDetector(
                 onTap: onAddProfile,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: canAdd ? const Color(0xFFF0FDF4) : const Color(0xFFFEF2F2),
-                    borderRadius: BorderRadius.circular(16),
+                    color: canAdd ? AppTheme.success.withOpacity(0.08) : AppTheme.error.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     border: Border.all(
-                      color: canAdd ? const Color(0xFFBBF7D0) : const Color(0xFFFCA5A5),
-                      width: 1,
+                      color: canAdd ? AppTheme.success.withOpacity(0.3) : AppTheme.error.withOpacity(0.3),
+                      style: BorderStyle.solid,
                     ),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        canAdd ? LucideIcons.plusCircle : LucideIcons.lock,
-                        size: 18,
-                        color: canAdd ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: canAdd ? AppTheme.success.withOpacity(0.5) : AppTheme.error.withOpacity(0.5),
+                            width: 1.5,
+                            style: BorderStyle.solid,
+                          ),
+                        ),
+                        child: Icon(
+                          canAdd ? LucideIcons.plus : LucideIcons.lock,
+                          size: 16,
+                          color: canAdd ? AppTheme.success : AppTheme.error,
+                        ),
                       ),
-                      const SizedBox(width: 6),
+                      const SizedBox(width: 8),
                       Text(
-                        canAdd ? "Add Profile" : "Upgrade to Add",
+                        canAdd ? "Add\nProfile" : "Upgrade\nto Add",
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: canAdd ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                          color: canAdd ? AppTheme.success : AppTheme.error,
                         ),
                       ),
                     ],

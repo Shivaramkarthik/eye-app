@@ -205,7 +205,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
               ),
 
               const SizedBox(height: 12),
-              const MedicalDisclaimerBanner(text: "Double-check the eye numbers as AI can make mistakes."),
+              const MedicalDisclaimerBanner(),
               const SizedBox(height: 16),
 
               if (showWarning) ...[

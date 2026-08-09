@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
-
-
+import '../utils/app_theme.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
 import '../services/database_service.dart';
@@ -74,12 +73,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: const Text("Create Profile", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Create Profile"),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -87,34 +85,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
-              // Step Indicator
+              // Step Progress Bar
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      height: 4,
-                      color: currentStep >= 1 ? const Color(0xFF0284C7) : Colors.grey.shade300,
+                    child: AnimatedContainer(
+                      duration: AppTheme.animFast,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        gradient: currentStep >= 1 ? AppTheme.primaryGradient : null,
+                        color: currentStep >= 1 ? null : AppTheme.border,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Container(
-                      height: 4,
-                      color: currentStep >= 2 ? const Color(0xFF0284C7) : Colors.grey.shade300,
+                    child: AnimatedContainer(
+                      duration: AppTheme.animFast,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        gradient: currentStep >= 2 ? AppTheme.primaryGradient : null,
+                        color: currentStep >= 2 ? null : AppTheme.border,
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
 
               if (currentStep == 1) ...[
-                const Text("Profile Details", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                const Text("Profile Details", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
                 const SizedBox(height: 6),
-                const Text("Who is this profile for?", style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
-                const SizedBox(height: 20),
+                const Text("Who is this profile for?", style: TextStyle(fontSize: 14, color: AppTheme.textSecondary)),
+                const SizedBox(height: 24),
 
-                // Adult vs Child Toggle
+                // Adult vs Child Card Selectors
                 Row(
                   children: [
                     Expanded(
@@ -123,18 +130,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           profileType = 'Adult';
                           relationship = 'Self';
                         }),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
+                        child: AnimatedContainer(
+                          duration: AppTheme.animFast,
+                          padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: profileType == 'Adult' ? const Color(0xFFE0F2FE) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: profileType == 'Adult' ? const Color(0xFF0284C7) : Colors.grey.shade300),
+                            gradient: profileType == 'Adult' ? AppTheme.primaryGradient : null,
+                            color: profileType == 'Adult' ? null : Colors.white,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                            boxShadow: profileType == 'Adult' ? AppTheme.primaryShadow : AppTheme.softShadow,
+                            border: profileType == 'Adult' ? null : Border.all(color: AppTheme.border),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(LucideIcons.user, size: 28, color: Color(0xFF0284C7)),
-                              SizedBox(height: 6),
-                              Text("Adult Profile", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Icon(Icons.person_rounded, size: 36, color: profileType == 'Adult' ? Colors.white : AppTheme.primary),
+                              const SizedBox(height: 10),
+                              Text("Adult Profile", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: profileType == 'Adult' ? Colors.white : AppTheme.textPrimary)),
                             ],
                           ),
                         ),
@@ -147,18 +157,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           profileType = 'Child';
                           relationship = 'Child';
                         }),
-                        child: Container(
-                          padding: const EdgeInsets.all(14),
+                        child: AnimatedContainer(
+                          duration: AppTheme.animFast,
+                          padding: const EdgeInsets.all(18),
                           decoration: BoxDecoration(
-                            color: profileType == 'Child' ? const Color(0xFFE0F2FE) : Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: profileType == 'Child' ? const Color(0xFF0284C7) : Colors.grey.shade300),
+                            gradient: profileType == 'Child' ? AppTheme.primaryGradient : null,
+                            color: profileType == 'Child' ? null : Colors.white,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                            boxShadow: profileType == 'Child' ? AppTheme.primaryShadow : AppTheme.softShadow,
+                            border: profileType == 'Child' ? null : Border.all(color: AppTheme.border),
                           ),
-                          child: const Column(
+                          child: Column(
                             children: [
-                              Icon(LucideIcons.baby, size: 28, color: Color(0xFF0284C7)),
-                              SizedBox(height: 6),
-                              Text("Child Profile", style: TextStyle(fontWeight: FontWeight.bold)),
+                              Icon(Icons.child_care_rounded, size: 36, color: profileType == 'Child' ? Colors.white : AppTheme.primary),
+                              const SizedBox(height: 10),
+                              Text("Child Profile", style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: profileType == 'Child' ? Colors.white : AppTheme.textPrimary)),
                             ],
                           ),
                         ),
@@ -166,51 +179,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 TextField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: "Name",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(LucideIcons.userCheck),
+                  decoration: AppTheme.inputDecoration(
+                    label: "Name",
+                    prefixIcon: Icons.badge_rounded,
                   ),
                 ),
                 const SizedBox(height: 14),
                 TextField(
                   controller: _dobController,
-                  decoration: const InputDecoration(
-                    labelText: "Date of Birth (YYYY-MM-DD)",
-                    border: OutlineInputBorder(),
-                    prefixIcon: Icon(LucideIcons.calendar),
+                  decoration: AppTheme.inputDecoration(
+                    label: "Date of Birth (YYYY-MM-DD)",
+                    prefixIcon: Icons.calendar_today_rounded,
                   ),
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
                   value: relationship,
-                  decoration: const InputDecoration(labelText: "Relationship", border: OutlineInputBorder()),
+                  decoration: AppTheme.inputDecoration(label: "Relationship", prefixIcon: Icons.family_restroom_rounded),
                   items: ['Self', 'Child', 'Spouse', 'Parent', 'Other']
                       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                       .toList(),
                   onChanged: (val) => setState(() => relationship = val!),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 28),
                 SizedBox(
                   width: double.infinity,
-                  height: 48,
-                  child: ElevatedButton(
-                    onPressed: _nameController.text.trim().isEmpty
-                        ? null
-                        : () => setState(() => currentStep = 2),
-                    style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
-                    child: const Text("Next: Symptom & Eye Flow", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  height: 52,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: AppTheme.primaryGradient,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      boxShadow: AppTheme.primaryShadow,
+                    ),
+                    child: ElevatedButton(
+                      onPressed: _nameController.text.trim().isEmpty
+                          ? null
+                          : () => setState(() => currentStep = 2),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                      ),
+                      child: const Text("Next: Symptoms & Eye Flow", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                    ),
                   ),
                 ),
               ] else if (currentStep == 2) ...[
-                const Text("Eye Prescription & Symptoms", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                const Text("Eye Prescription & Symptoms", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
                 const SizedBox(height: 6),
-                const Text("Do you know your prescription type?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF334155))),
-                const SizedBox(height: 14),
+                const Text("Do you know your prescription type?", style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
+                const SizedBox(height: 16),
 
                 Row(
                   children: ['Yes', 'No', 'Not sure'].map((option) {
@@ -218,18 +240,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     return Expanded(
                       child: GestureDetector(
                         onTap: () => setState(() => knowsPrescriptionType = option),
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: AppTheme.animFast,
                           margin: const EdgeInsets.only(right: 8),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           decoration: BoxDecoration(
-                            color: isSelected ? const Color(0xFF0284C7) : Colors.white,
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isSelected ? const Color(0xFF0284C7) : Colors.grey.shade300),
+                            gradient: isSelected ? AppTheme.primaryGradient : null,
+                            color: isSelected ? null : Colors.white,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            border: isSelected ? null : Border.all(color: AppTheme.border),
+                            boxShadow: isSelected ? AppTheme.primaryShadow : [],
                           ),
                           child: Center(
                             child: Text(
                               option,
-                              style: TextStyle(fontWeight: FontWeight.bold, color: isSelected ? Colors.white : Colors.black),
+                              style: TextStyle(fontWeight: FontWeight.w700, color: isSelected ? Colors.white : AppTheme.textPrimary),
                             ),
                           ),
                         ),
@@ -237,12 +262,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     );
                   }).toList(),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 24),
 
                 // If YES -> Technical Options
                 if (knowsPrescriptionType == 'Yes') ...[
-                  const Text("Select technical prescription type:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  const Text("Select technical prescription type:", style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -251,8 +276,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       return ChoiceChip(
                         label: Text(opt),
                         selected: isSel,
-                        selectedColor: const Color(0xFF0284C7),
-                        labelStyle: TextStyle(color: isSel ? Colors.white : Colors.black),
+                        selectedColor: AppTheme.primary,
+                        backgroundColor: Colors.white,
+                        labelStyle: TextStyle(color: isSel ? Colors.white : AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSel ? AppTheme.primary : AppTheme.border)),
                         onSelected: (_) => setState(() => selectedPrescriptionType = opt),
                       );
                     }).toList(),
@@ -261,8 +288,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
                 // If NO / NOT SURE -> Symptom Flow
                 if (knowsPrescriptionType == 'No' || knowsPrescriptionType == 'Not sure') ...[
-                  const Text("Select visual symptoms experienced:", style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
+                  const Text("Select visual symptoms experienced:", style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                  const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -271,7 +298,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       return FilterChip(
                         label: Text(symp),
                         selected: isSel,
-                        selectedColor: const Color(0xFFE0F2FE),
+                        selectedColor: AppTheme.primary.withOpacity(0.15),
+                        backgroundColor: Colors.white,
+                        labelStyle: TextStyle(color: isSel ? AppTheme.primary : AppTheme.textPrimary, fontWeight: FontWeight.w600),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSel ? AppTheme.primary : AppTheme.border)),
                         onSelected: (selected) {
                           setState(() {
                             if (selected) {
@@ -285,21 +315,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     }).toList(),
                   ),
                   if (selectedSymptoms.contains('Blurred vision')) ...[
-                    const SizedBox(height: 16),
-                    const Text("Blurred vision follow-up:", style: TextStyle(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 20),
+                    const Text("Blurred vision follow-up:", style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
                       value: blurredVisionType ?? 'Both',
-                      decoration: const InputDecoration(labelText: "Difficulty seeing...", border: OutlineInputBorder()),
+                      decoration: AppTheme.inputDecoration(label: "Difficulty seeing..."),
                       items: ['Difficulty seeing nearby objects', 'Difficulty seeing distant objects', 'Difficulty seeing both near and far', 'Not sure']
-                          .map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 12))))
+                          .map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 13))))
                           .toList(),
                       onChanged: (val) => setState(() => blurredVisionType = val),
                     ),
                   ],
                 ],
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 32),
                 Row(
                   children: [
                     Expanded(
@@ -310,10 +340,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                     const SizedBox(width: 14),
                     Expanded(
-                      child: ElevatedButton(
-                        onPressed: _submitProfile,
-                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
-                        child: const Text("Save & Complete", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          boxShadow: AppTheme.primaryShadow,
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _submitProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                          ),
+                          child: const Text("Save & Finish", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                        ),
                       ),
                     ),
                   ],

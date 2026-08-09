@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/prescription_model.dart';
+import '../utils/app_theme.dart';
 
 class AcademicBwChart extends StatelessWidget {
   final List<PrescriptionModel> prescriptions;
@@ -10,145 +11,183 @@ class AcademicBwChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white, // Plain white background
-        border: Border.all(color: Colors.black54, width: 1.2),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                "FIGURE 1: REFRACTION POWER TREND (SPHERICAL EQUIVALENT)",
-                style: TextStyle(
-                  fontFamily: 'Courier',
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  letterSpacing: 0.5,
-                ),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.textPrimary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.ssid_chart_rounded, color: Colors.white, size: 18),
+                  ),
+                  const SizedBox(width: 10),
+                  const Text(
+                    "Refraction Trend",
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black, width: 0.8),
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Text(
-                  "ACADEMIC B&W GRID",
-                  style: TextStyle(fontFamily: 'Courier', fontSize: 9, color: Colors.black),
+                  "SPH Trend",
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           SizedBox(
             height: 160,
             width: double.infinity,
             child: CustomPaint(
-              painter: AcademicGridPainter(prescriptions: prescriptions),
+              painter: _ModernGridPainter(prescriptions: prescriptions),
             ),
           ),
-          const SizedBox(height: 10),
-          const Row(
+          const SizedBox(height: 12),
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text("──■── Right Eye (OD)", style: TextStyle(fontFamily: 'Courier', fontSize: 10, color: Colors.black)),
-              SizedBox(width: 20),
-              Text("┅┅▲┅┅ Left Eye (OS)", style: TextStyle(fontFamily: 'Courier', fontSize: 10, color: Colors.black)),
+              _legendDot(AppTheme.primary, "Right Eye (OD)"),
+              const SizedBox(width: 24),
+              _legendDot(AppTheme.accent, "Left Eye (OS)"),
             ],
           ),
         ],
       ),
     );
   }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 10,
+          height: 10,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textSecondary,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-/// CustomPainter that renders strict black and white academic technical chart on engineering grid
-class AcademicGridPainter extends CustomPainter {
+class _ModernGridPainter extends CustomPainter {
   final List<PrescriptionModel> prescriptions;
 
-  AcademicGridPainter({required this.prescriptions});
+  _ModernGridPainter({required this.prescriptions});
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw subtle light grey engineering grid
+    // Subtle grid lines
     final gridPaint = Paint()
-      ..color = const Color(0xFFE0E0E0)
-      ..strokeWidth = 0.8;
+      ..color = const Color(0xFFF0F4F8)
+      ..strokeWidth = 1;
 
-    const gridSpacing = 16.0;
-
-    for (double x = 0; x <= size.width; x += gridSpacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
+    const gridSpacing = 20.0;
     for (double y = 0; y <= size.height; y += gridSpacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+      canvas.drawLine(Offset(35, y), Offset(size.width, y), gridPaint);
     }
 
-    // 2. Draw axes (Strict Black)
+    // Y axis
     final axisPaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1.5;
+      ..color = const Color(0xFFCBD5E1)
+      ..strokeWidth = 1;
+    canvas.drawLine(Offset(35, 0), Offset(35, size.height - 20), axisPaint);
 
-    canvas.drawLine(Offset(35, 0), Offset(35, size.height - 20), axisPaint); // Y axis
-    canvas.drawLine(Offset(35, size.height - 20), Offset(size.width, size.height - 20), axisPaint); // X axis
-
-    // Draw Y axis labels (SPH Diopters)
+    // Y axis labels
     final textPainter = TextPainter(textDirection: TextDirection.ltr);
-
     List<double> yTicks = [0.0, -1.0, -2.0, -3.0, -4.0];
     for (int i = 0; i < yTicks.length; i++) {
       double yPos = (size.height - 25) * (i / (yTicks.length - 1));
       textPainter.text = TextSpan(
         text: "${yTicks[i].toStringAsFixed(1)}D",
-        style: const TextStyle(fontFamily: 'Courier', fontSize: 9, color: Colors.black),
+        style: const TextStyle(fontSize: 9, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
       );
       textPainter.layout();
       textPainter.paint(canvas, Offset(0, yPos - 4));
     }
 
-    // Plot Points if prescriptions exist
     if (prescriptions.isEmpty) {
       textPainter.text = const TextSpan(
-        text: "[No historical prescriptions to plot]",
-        style: TextStyle(fontFamily: 'Courier', fontSize: 10, color: Colors.black),
+        text: "No prescriptions to plot",
+        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w500),
       );
       textPainter.layout();
       textPainter.paint(canvas, Offset(size.width * 0.3, size.height * 0.4));
       return;
     }
 
-    // Draw Right Eye (OD) solid line & Left Eye (OS) dashed line
-    final rightLinePaint = Paint()
-      ..color = Colors.black
-      ..strokeWidth = 1.8
-      ..style = PaintingStyle.stroke;
-
-    final pointPaint = Paint()
-      ..color = Colors.black
-      ..style = PaintingStyle.fill;
-
     double plotWidth = size.width - 50;
     double stepX = prescriptions.length > 1 ? plotWidth / (prescriptions.length - 1) : plotWidth;
 
+    // Right eye path (teal)
+    final rightLinePaint = Paint()
+      ..color = const Color(0xFF0A6B7C)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    // Left eye path (amber)
+    final leftLinePaint = Paint()
+      ..color = const Color(0xFFFFB74D)
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
     Path rightPath = Path();
     Path leftPath = Path();
+    List<Offset> rightPoints = [];
+    List<Offset> leftPoints = [];
 
     for (int i = 0; i < prescriptions.length; i++) {
       final p = prescriptions[i];
       double x = 40 + (i * stepX);
-
       double rSph = p.rightSph ?? -2.0;
       double lSph = p.leftSph ?? -2.0;
-
-      // Map SPH values 0 to -4 to Y coordinates
       double rY = (size.height - 25) * (rSph.abs() / 4.0).clamp(0.0, 1.0);
       double lY = (size.height - 25) * (lSph.abs() / 4.0).clamp(0.0, 1.0);
+
+      rightPoints.add(Offset(x, rY));
+      leftPoints.add(Offset(x, lY));
 
       if (i == 0) {
         rightPath.moveTo(x, rY);
@@ -157,20 +196,22 @@ class AcademicGridPainter extends CustomPainter {
         rightPath.lineTo(x, rY);
         leftPath.lineTo(x, lY);
       }
-
-      // Draw OD square point
-      canvas.drawRect(Rect.fromCenter(center: Offset(x, rY), width: 6, height: 6), pointPaint);
-
-      // Draw OS triangle point
-      Path tri = Path()
-        ..moveTo(x, lY - 4)
-        ..lineTo(x - 4, lY + 3)
-        ..lineTo(x + 4, lY + 3)
-        ..close();
-      canvas.drawPath(tri, pointPaint);
     }
 
     canvas.drawPath(rightPath, rightLinePaint);
+    canvas.drawPath(leftPath, leftLinePaint);
+
+    // Draw points with glow
+    for (final pt in rightPoints) {
+      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFF0A6B7C).withOpacity(0.15));
+      canvas.drawCircle(pt, 4, Paint()..color = Colors.white);
+      canvas.drawCircle(pt, 3, Paint()..color = const Color(0xFF0A6B7C));
+    }
+    for (final pt in leftPoints) {
+      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFFFFB74D).withOpacity(0.15));
+      canvas.drawCircle(pt, 4, Paint()..color = Colors.white);
+      canvas.drawCircle(pt, 3, Paint()..color = const Color(0xFFFFB74D));
+    }
   }
 
   @override

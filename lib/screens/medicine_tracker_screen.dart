@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
-
-
+import '../utils/app_theme.dart';
 import '../models/medicine_model.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
@@ -78,7 +77,6 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
     final logKey = "${DateTime.now().toString().split(' ')[0]}_$timeKey";
     await DatabaseService.instance.toggleMedicineLog(med.id, logKey);
 
-    // Audio & vibration alert response
     await AudioHapticService.instance.playNotificationTone(med.tone);
     if (med.vibrationEnabled) {
       await AudioHapticService.instance.triggerVibration();
@@ -92,87 +90,142 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text("Schedule Eye Drop / Medicine", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 14),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: "Medicine / Drop Name", border: OutlineInputBorder()),
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: DropdownButtonFormField<String>(
-                          value: selectedType,
-                          decoration: const InputDecoration(labelText: "Type", border: OutlineInputBorder()),
-                          items: ['Drop', 'Tablet', 'Ointment', 'Custom']
-                              .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                              .toList(),
-                          onChanged: (val) => setModalState(() => selectedType = val!),
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 24,
+                  left: 24,
+                  right: 24,
+                  bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Handle bar
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.border,
+                          borderRadius: BorderRadius.circular(2),
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: _dosageController,
-                          decoration: const InputDecoration(labelText: "Dosage", border: OutlineInputBorder()),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            gradient: AppTheme.successGradient,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.water_drop_rounded, color: Colors.white, size: 20),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Schedule Eye Drop / Medicine",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: _nameController,
+                      decoration: AppTheme.inputDecoration(
+                        label: "Medicine / Drop Name",
+                        prefixIcon: Icons.medication_rounded,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            value: selectedType,
+                            decoration: AppTheme.inputDecoration(label: "Type"),
+                            items: ['Drop', 'Tablet', 'Ointment', 'Custom']
+                                .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                                .toList(),
+                            onChanged: (val) => setModalState(() => selectedType = val!),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: TextField(
+                            controller: _dosageController,
+                            decoration: AppTheme.inputDecoration(label: "Dosage"),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+                    DropdownButtonFormField<String>(
+                      value: selectedTone,
+                      decoration: AppTheme.inputDecoration(
+                        label: "Notification Sound",
+                        prefixIcon: Icons.volume_up_rounded,
+                      ),
+                      items: ['Soft Chime', 'Gentle Bell', 'Alert Beep']
+                          .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                          .toList(),
+                      onChanged: (val) => setModalState(() => selectedTone = val!),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                      ),
+                      child: SwitchListTile(
+                        title: const Text("Vibration Mode", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        subtitle: const Text("Vibrate on reminder alert", style: TextStyle(fontSize: 12)),
+                        secondary: Icon(Icons.vibration_rounded, color: vibrationEnabled ? AppTheme.primary : AppTheme.textHint),
+                        value: vibrationEnabled,
+                        activeColor: AppTheme.primary,
+                        onChanged: (val) => setModalState(() => vibrationEnabled = val),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          boxShadow: AppTheme.primaryShadow,
+                        ),
+                        child: ElevatedButton(
+                          onPressed: _addMedicine,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                            ),
+                          ),
+                          child: const Text("Save Schedule", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Notification Tone Selector
-                  DropdownButtonFormField<String>(
-                    value: selectedTone,
-                    decoration: const InputDecoration(
-                      labelText: "Notification Sound Tone",
-                      prefixIcon: Icon(LucideIcons.volume2),
-                      border: OutlineInputBorder(),
                     ),
-                    items: ['Soft Chime', 'Gentle Bell', 'Alert Beep']
-                        .map((t) => DropdownMenuItem(value: t, child: Text(t)))
-                        .toList(),
-                    onChanged: (val) => setModalState(() => selectedTone = val!),
-                  ),
-                  const SizedBox(height: 10),
-
-                  // Vibration Mode Toggle
-                  SwitchListTile(
-                    title: const Text("Vibration Mode"),
-                    subtitle: const Text("Vibrate device on reminder alert"),
-                    secondary: const Icon(LucideIcons.vibrate),
-                    value: vibrationEnabled,
-                    onChanged: (val) => setModalState(() => vibrationEnabled = val),
-                  ),
-
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 48,
-                    child: ElevatedButton(
-                      onPressed: _addMedicine,
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0284C7)),
-                      child: const Text("Save Schedule", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -186,130 +239,171 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
     String todayStr = DateTime.now().toString().split(' ')[0];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: Text("Eye Drops & Reminders (${widget.profile.name})", style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text("Eye Drops · ${widget.profile.name}"),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddMedicineModal,
-        backgroundColor: const Color(0xFF0284C7),
-        icon: const Icon(LucideIcons.plus, color: Colors.white),
-        label: const Text("Add Drop", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: AppTheme.primaryGradient,
+          borderRadius: BorderRadius.circular(28),
+          boxShadow: AppTheme.primaryShadow,
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: _showAddMedicineModal,
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add_rounded, color: Colors.white),
+          label: const Text("Add Drop", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        ),
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const Center(child: CircularProgressIndicator(color: AppTheme.primary))
           : medicines.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(LucideIcons.droplets, size: 48, color: Color(0xFF94A3B8)),
-                      const SizedBox(height: 12),
-                      const Text("No eye drop reminders set yet.", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF475569))),
-                      const SizedBox(height: 4),
-                      const Text("Tap '+ Add Drop' to set up daily medicine schedules.", style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withOpacity(0.08),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.water_drop_rounded, size: 48, color: AppTheme.primary.withOpacity(0.4)),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text("No eye drop reminders yet", style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                      const SizedBox(height: 6),
+                      const Text("Tap '+ Add Drop' to set up daily schedules", style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
                     ],
                   ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   itemCount: medicines.length,
                   itemBuilder: (context, index) {
                     final med = medicines[index];
+                    final Color accentColor = med.type == 'Drop'
+                        ? AppTheme.primary
+                        : med.type == 'Tablet'
+                            ? AppTheme.accent
+                            : AppTheme.success;
+
                     return Container(
                       margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+                        boxShadow: AppTheme.softShadow,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: const BoxDecoration(color: Color(0xFFE0F2FE), shape: BoxShape.circle),
-                                child: Icon(
-                                  med.type == 'Drop' ? LucideIcons.droplet : LucideIcons.pill,
-                                  color: const Color(0xFF0284C7),
-                                  size: 20,
-                                ),
+                          // Left accent bar
+                          Container(
+                            width: 4,
+                            height: 130,
+                            decoration: BoxDecoration(
+                              color: accentColor,
+                              borderRadius: const BorderRadius.only(
+                                topLeft: Radius.circular(20),
+                                bottomLeft: Radius.circular(20),
                               ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(med.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                                    Text("${med.type} • ${med.dosage}", style: const TextStyle(fontSize: 12, color: Color(0xFF64748B))),
-                                  ],
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
-                          const SizedBox(height: 12),
-                          Row(
-                            children: [
-                              Icon(LucideIcons.volume2, size: 14, color: Colors.grey.shade600),
-                              const SizedBox(width: 4),
-                              Text(med.tone, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                              const SizedBox(width: 12),
-                              Icon(LucideIcons.vibrate, size: 14, color: med.vibrationEnabled ? const Color(0xFF0284C7) : Colors.grey.shade400),
-                              const SizedBox(width: 4),
-                              Text(med.vibrationEnabled ? "Vibration On" : "Vibration Off", style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          const Divider(height: 1),
-                          const SizedBox(height: 10),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: med.times.map((t) {
-                              final logKey = "${todayStr}_$t";
-                              bool isDone = med.completedLogs.contains(logKey);
-                              return GestureDetector(
-                                onTap: () => _toggleLog(med, t),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: isDone ? const Color(0xFFDCFCE7) : const Color(0xFFF1F5F9),
-                                    borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: isDone ? const Color(0xFF86EFAC) : const Color(0xFFE2E8F0)),
-                                  ),
-                                  child: Row(
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
                                     children: [
-                                      Icon(
-                                        isDone ? LucideIcons.checkCircle : LucideIcons.clock,
-                                        size: 16,
-                                        color: isDone ? const Color(0xFF16A34A) : const Color(0xFF64748B),
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: accentColor.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Icon(
+                                          med.type == 'Drop' ? Icons.water_drop_rounded : Icons.medication_rounded,
+                                          color: accentColor,
+                                          size: 20,
+                                        ),
                                       ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        t,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: isDone ? const Color(0xFF15803D) : const Color(0xFF334155),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(med.name, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                                            const SizedBox(height: 2),
+                                            Text("${med.type} · ${med.dosage}", style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: AppTheme.textSecondary)),
+                                          ],
                                         ),
                                       ),
                                     ],
                                   ),
-                                ),
-                              );
-                            }).toList(),
+                                  const SizedBox(height: 12),
+                                  // Tone and vibration info
+                                  Row(
+                                    children: [
+                                      Icon(Icons.volume_up_rounded, size: 14, color: AppTheme.textHint),
+                                      const SizedBox(width: 4),
+                                      Text(med.tone, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                                      const SizedBox(width: 14),
+                                      Icon(Icons.vibration_rounded, size: 14, color: med.vibrationEnabled ? AppTheme.primary : AppTheme.textHint),
+                                      const SizedBox(width: 4),
+                                      Text(med.vibrationEnabled ? "On" : "Off", style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 12),
+                                  // Time toggle buttons
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: med.times.map((t) {
+                                      final logKey = "${todayStr}_$t";
+                                      bool isDone = med.completedLogs.contains(logKey);
+                                      return GestureDetector(
+                                        onTap: () => _toggleLog(med, t),
+                                        child: AnimatedContainer(
+                                          duration: AppTheme.animFast,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                          decoration: BoxDecoration(
+                                            gradient: isDone ? AppTheme.successGradient : null,
+                                            color: isDone ? null : AppTheme.surface,
+                                            borderRadius: BorderRadius.circular(AppTheme.radiusSmall),
+                                            boxShadow: isDone
+                                                ? [BoxShadow(color: AppTheme.success.withOpacity(0.25), blurRadius: 8, offset: const Offset(0, 3))]
+                                                : [],
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                isDone ? Icons.check_circle_rounded : Icons.access_time_rounded,
+                                                size: 18,
+                                                color: isDone ? Colors.white : AppTheme.textSecondary,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                t,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isDone ? Colors.white : AppTheme.textPrimary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ],
                       ),

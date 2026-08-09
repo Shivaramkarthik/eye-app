@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
-
-
+import '../utils/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/razorpay_service.dart';
 
@@ -45,60 +44,76 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
-        title: const Text("Upgrade to Specz Plus", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text("Upgrade to Specz Plus"),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(color: Color(0xFFFEF3C7), shape: BoxShape.circle),
-                child: const Icon(LucideIcons.crown, size: 48, color: Color(0xFFD97706)),
-              ),
-              const SizedBox(height: 16),
-              const Text("Specz Plus Plan", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-              const SizedBox(height: 4),
-              const Text("Manage your entire family's vision health in one place", style: TextStyle(fontSize: 13, color: Color(0xFF64748B))),
-              const SizedBox(height: 24),
-
-              // Pricing Card
+              // Hero Banner with Warm Gradient
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFF59E0B), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFF59E0B).withOpacity(0.12),
-                      blurRadius: 16,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  gradient: AppTheme.warmGradient,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  boxShadow: AppTheme.accentShadow,
                 ),
                 child: Column(
                   children: [
-                    const Row(
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                      ),
+                      child: const Icon(Icons.workspace_premium_rounded, size: 48, color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      "Specz Plus Plan",
+                      style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800, color: Colors.white),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      "Manage your entire family's vision health in one app",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9)),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Features & Price Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+                  boxShadow: AppTheme.softShadow,
+                ),
+                child: Column(
+                  children: [
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.baseline,
                       textBaseline: TextBaseline.alphabetic,
-                      children: [
-
-                        Text("₹99", style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
-                        Text(" / month", style: TextStyle(fontSize: 14, color: Color(0xFF64748B))),
+                      children: const [
+                        Text("₹99", style: TextStyle(fontSize: 40, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
+                        Text(" / month", style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppTheme.textSecondary)),
                       ],
                     ),
-                    const SizedBox(height: 16),
-                    const Divider(height: 1),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 20),
+                    const Divider(),
+                    const SizedBox(height: 20),
 
                     _buildFeatureRow("Manage up to 5 family active profiles"),
                     _buildFeatureRow("Multilingual downloadable PDF summary reports"),
@@ -107,28 +122,36 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
                     _buildFeatureRow("Academic Black & White Refraction Trend Charts"),
                     _buildFeatureRow("Priority Support & Cloud Backup"),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 28),
 
                     SizedBox(
                       width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton.icon(
-                        onPressed: isProcessing ? null : _handleRazorpayCheckout,
-                        icon: const Icon(LucideIcons.creditCard, color: Colors.white),
-                        label: isProcessing
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Text("Pay ₹99 with Razorpay", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0284C7),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      height: 52,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: AppTheme.primaryGradient,
+                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                          boxShadow: AppTheme.primaryShadow,
+                        ),
+                        child: ElevatedButton.icon(
+                          onPressed: isProcessing ? null : _handleRazorpayCheckout,
+                          icon: const Icon(Icons.credit_card_rounded, color: Colors.white),
+                          label: isProcessing
+                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                              : const Text("Pay ₹99 with Razorpay", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text("Cancel anytime from account settings. Secure Razorpay payment processing.", style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+              const SizedBox(height: 18),
+              const Text("Cancel anytime from account settings. Secure Razorpay payment gateway.", style: TextStyle(fontSize: 12, color: AppTheme.textHint)),
             ],
           ),
         ),
@@ -138,12 +161,19 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
 
   Widget _buildFeatureRow(String text) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          const Icon(LucideIcons.checkCircle2, size: 18, color: Color(0xFF10B981)),
-          const SizedBox(width: 10),
-          Expanded(child: Text(text, style: const TextStyle(fontSize: 13, color: Color(0xFF334155)))),
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: AppTheme.success.withOpacity(0.12),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.check_rounded, size: 16, color: AppTheme.success),
+          ),
+          const SizedBox(width: 12),
+          Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: AppTheme.textPrimary))),
         ],
       ),
     );

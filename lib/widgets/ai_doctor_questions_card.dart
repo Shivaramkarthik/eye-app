@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
-
-
+import '../utils/app_theme.dart';
 
 class AiDoctorQuestionsCard extends StatelessWidget {
   final List<String> questions;
@@ -14,47 +12,74 @@ class AiDoctorQuestionsCard extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+        boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          const Row(
+          Row(
             children: [
-              Icon(LucideIcons.sparkles, size: 18, color: Color(0xFF0284C7)),
-              SizedBox(width: 8),
-              Text(
-                "AI Suggested Doctor Questions",
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: AppTheme.purpleGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.auto_awesome_rounded, color: Colors.white, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                "AI Doctor Questions",
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFF0F172A),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          ...questions.map((q) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-                    const Text("• ", style: TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF0284C7))),
-                    Expanded(
-                      child: Text(
-                        q,
-                        style: const TextStyle(fontSize: 13, color: Color(0xFF334155), height: 1.3),
-                      ),
+          const SizedBox(height: 14),
+          ...questions.asMap().entries.map((entry) {
+            final index = entry.key;
+            final question = entry.value;
+            // Alternate alignment to simulate chat
+            bool isAi = index % 2 == 0;
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Align(
+                alignment: isAi ? Alignment.centerLeft : Alignment.centerRight,
+                child: Container(
+                  constraints: BoxConstraints(
+                    maxWidth: MediaQuery.of(context).size.width * 0.7,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: isAi ? null : AppTheme.primaryGradient,
+                    color: isAi ? AppTheme.surface : null,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isAi ? 4 : 16),
+                      bottomRight: Radius.circular(isAi ? 16 : 4),
                     ),
-                  ],
+                  ),
+                  child: Text(
+                    question,
+                    style: TextStyle(
+                      fontSize: 13,
+                      height: 1.4,
+                      color: isAi ? AppTheme.textPrimary : Colors.white,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              )),
+              ),
+            );
+          }),
         ],
       ),
     );
