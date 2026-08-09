@@ -39,7 +39,7 @@ class UserModel {
     return UserModel(
       id: map['id'] ?? '',
       email: map['email'] ?? '',
-      name: map['name'] ?? 'Karthik',
+      name: map['name'] ?? 'Eye Care User',
       plan: map['plan'] ?? 'free',
       subscriptionId: map['subscriptionId'],
       status: map['status'] ?? 'free',

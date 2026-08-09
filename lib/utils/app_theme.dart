@@ -5,12 +5,12 @@ import 'package:flutter/material.dart';
 class AppTheme {
   AppTheme._();
 
-  // ─── PRIMARY PALETTE ─────────────────────────────────────────────
-  static const Color primary = Color(0xFF0A6B7C);
-  static const Color primaryLight = Color(0xFF00BCD4);
-  static const Color primaryDark = Color(0xFF064E5A);
-  static const Color accent = Color(0xFFFFB74D);
-  static const Color accentLight = Color(0xFFFFD180);
+  // ─── PRIMARY PALETTE (Electric Sapphire Blue) ──────────────────────
+  static const Color primary = Color(0xFF0066FF);
+  static const Color primaryLight = Color(0xFF3B82F6);
+  static const Color primaryDark = Color(0xFF0052CC);
+  static const Color accent = Color(0xFF00D2FF);
+  static const Color accentLight = Color(0xFF7DD3FC);
 
   // ─── SEMANTIC COLORS ─────────────────────────────────────────────
   static const Color success = Color(0xFF10B981);
@@ -21,31 +21,31 @@ class AppTheme {
   static const Color errorLight = Color(0xFFFEE2E2);
 
   // ─── SURFACE & BACKGROUND ────────────────────────────────────────
-  static const Color surface = Color(0xFFF0F4F8);
+  static const Color surface = Color(0xFFF0F6FF);
   static const Color cardWhite = Color(0xFFFFFFFF);
-  static const Color scaffoldBg = Color(0xFFF5F7FA);
+  static const Color scaffoldBg = Color(0xFFF8FAFC);
 
   // ─── TEXT COLORS ─────────────────────────────────────────────────
-  static const Color textPrimary = Color(0xFF1A2B3C);
-  static const Color textSecondary = Color(0xFF6B7D8E);
-  static const Color textHint = Color(0xFF9EADB8);
+  static const Color textPrimary = Color(0xFF0F172A);
+  static const Color textSecondary = Color(0xFF475569);
+  static const Color textHint = Color(0xFF94A3B8);
   static const Color textOnPrimary = Colors.white;
 
   // ─── BORDER / DIVIDER ────────────────────────────────────────────
-  static const Color border = Color(0xFFE1E8ED);
+  static const Color border = Color(0xFFE2E8F0);
   static const Color divider = Color(0xFFF1F5F9);
 
-  // ─── GRADIENTS ───────────────────────────────────────────────────
+  // ─── GRADIENTS (Modern Blue Palette) ──────────────────────────────
   static const LinearGradient primaryGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFF0A6B7C), Color(0xFF00BCD4)],
+    colors: [Color(0xFF0066FF), Color(0xFF0052CC)],
   );
 
   static const LinearGradient heroGradient = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0xFF0A6B7C), Color(0xFF0E8A9E), Color(0xFF00BCD4)],
+    colors: [Color(0xFF0052CC), Color(0xFF0066FF), Color(0xFF2563EB)],
   );
 
   static const LinearGradient warmGradient = LinearGradient(
@@ -63,7 +63,7 @@ class AppTheme {
   static const LinearGradient subtleGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [Color(0xFFE0F7FA), Color(0xFFB2EBF2)],
+    colors: [Color(0xFFEFF6FF), Color(0xFFDBEAFE)],
   );
 
   static const LinearGradient purpleGradient = LinearGradient(

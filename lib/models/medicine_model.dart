@@ -92,4 +92,9 @@ class MedicineModel {
       createdAt: map['createdAt'] ?? DateTime.now().toIso8601String(),
     );
   }
+
+  bool isLoggedFor(String dateStr, String timeKey) {
+    final key = "${dateStr}_$timeKey";
+    return completedLogs.contains(key);
+  }
 }

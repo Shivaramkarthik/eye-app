@@ -20,6 +20,7 @@ import 'premium_upgrade_screen.dart';
 import 'profile_settings_screen.dart';
 import 'report_viewer_screen.dart';
 import 'onboarding_screen.dart';
+import 'ai_chat_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final UserModel user;
@@ -74,7 +75,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
   }
 
   Future<void> _refreshData() async {
-    setState(() => isLoading = true);
+    if (profiles.isEmpty) {
+      setState(() => isLoading = true);
+    }
     final dbUser = await DatabaseService.instance.getUser(currentUser.id);
     if (dbUser != null) currentUser = dbUser;
 
@@ -202,6 +205,276 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
+  void _navigateToAiChat([String? question]) {
+    Navigator.push(
+      context,
+      AppTheme.fadeSlideRoute(
+        AiChatScreen(
+          user: currentUser,
+          profile: selectedProfile,
+          initialQuestion: question,
+        ),
+      ),
+    );
+  }
+
+  void _handleScoreCardTap() {
+    if (selectedProfile == null) return;
+    if (prescriptions.isEmpty) {
+      _navigateToUploadPrescription();
+    } else {
+      _showEyeHealthScoreBreakdownModal();
+    }
+  }
+
+  void _showEyeHealthScoreBreakdownModal() {
+    final latestPrescription = prescriptions.first;
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusXL)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        gradient: AppTheme.primaryGradient,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(Icons.analytics_rounded, color: Colors.white, size: 24),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "Eye Health Score Analysis",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Based on ${selectedProfile?.name}'s prescription",
+                            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        "$eyeHealthScore / 100",
+                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Divider(),
+                const SizedBox(height: 14),
+
+                // Latest Prescription Details Card
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.medical_information_rounded, size: 16, color: AppTheme.primary),
+                              const SizedBox(width: 6),
+                              Text(
+                                "Logged Prescription (${latestPrescription.prescriptionDate})",
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                              ),
+                            ],
+                          ),
+                          const Icon(Icons.verified_rounded, size: 16, color: AppTheme.success),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Doctor: ${latestPrescription.doctorName} · ${latestPrescription.clinicName}",
+                        style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("Right Eye (OD)", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                                  const SizedBox(height: 2),
+                                  Text("SPH: ${latestPrescription.rightSph}D\nCYL: ${latestPrescription.rightCyl}D", style: const TextStyle(fontSize: 12, height: 1.3)),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text("Left Eye (OS)", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppTheme.primary)),
+                                  const SizedBox(height: 2),
+                                  Text("SPH: ${latestPrescription.leftSph}D\nCYL: ${latestPrescription.leftCyl}D", style: const TextStyle(fontSize: 12, height: 1.3)),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                const Text("Score Calculation Breakdown", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                const SizedBox(height: 10),
+                _buildScoreFactorRow(
+                  icon: Icons.assignment_turned_in_rounded,
+                  title: "Prescription Logged",
+                  pts: "+35 Pts",
+                  desc: "Valid doctor prescription scan on record.",
+                  color: AppTheme.success,
+                ),
+                const SizedBox(height: 10),
+                _buildScoreFactorRow(
+                  icon: Icons.balance_rounded,
+                  title: "Refractive Power Evaluation",
+                  pts: "+35 Pts",
+                  desc: "SPH/CYL focal power stability analysis.",
+                  color: AppTheme.primary,
+                ),
+                const SizedBox(height: 10),
+                _buildScoreFactorRow(
+                  icon: Icons.water_drop_rounded,
+                  title: "Eye Drop Adherence",
+                  pts: "+30 Pts",
+                  desc: medicines.isNotEmpty ? "${medicines.length} Eye drop schedule(s) active" : "No eye drops configured",
+                  color: AppTheme.warning,
+                ),
+                const SizedBox(height: 20),
+
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withOpacity(0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.auto_awesome_rounded, color: AppTheme.primary, size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          scoreExplanation,
+                          style: const TextStyle(fontSize: 12, color: AppTheme.textPrimary, height: 1.4),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _navigateToUploadPrescription();
+                    },
+                    icon: const Icon(Icons.camera_alt_rounded, color: Colors.white),
+                    label: const Text("Update / Scan New Prescription", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildScoreFactorRow({
+    required IconData icon,
+    required String title,
+    required String pts,
+    required String desc,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+            child: Icon(icon, color: color, size: 18),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
+                Text(desc, style: const TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
+              ],
+            ),
+          ),
+          Text(pts, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: color)),
+        ],
+      ),
+    );
+  }
+
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) return "Good morning";
@@ -297,6 +570,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           EyeHealthScoreCard(
                             score: eyeHealthScore,
                             explanation: scoreExplanation,
+                            onTap: _handleScoreCardTap,
                           ),
                           const SizedBox(height: 20),
 
@@ -322,7 +596,10 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                           const SizedBox(height: 20),
 
                           // AI Doctor Questions
-                          AiDoctorQuestionsCard(questions: doctorQuestions),
+                          AiDoctorQuestionsCard(
+                            questions: doctorQuestions,
+                            onQuestionTap: (question) => _navigateToAiChat(question),
+                          ),
                           const SizedBox(height: 20),
 
                           const MedicalDisclaimerBanner(),
@@ -393,6 +670,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     selectedProfile = null;
                     _refreshData();
                   },
+                  onProfileUpdated: (updated) {
+                    _refreshData();
+                  },
                   onLogout: widget.onLogout,
                 ),
               ),
@@ -431,52 +711,98 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     );
   }
 
+  void _navigateToProfileSettings() {
+    if (selectedProfile != null) {
+      Navigator.push(
+        context,
+        AppTheme.fadeSlideRoute(
+          ProfileSettingsScreen(
+            user: currentUser,
+            profile: selectedProfile!,
+            onProfileDeleted: () {
+              selectedProfile = null;
+              _refreshData();
+            },
+            onLogout: widget.onLogout,
+            onProfileUpdated: (updatedProf) {
+              setState(() {
+                selectedProfile = updatedProf;
+              });
+              _refreshData();
+            },
+          ),
+        ),
+      );
+    }
+  }
+
   Widget _buildWelcomeHeader() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                gradient: AppTheme.primaryGradient,
-                shape: BoxShape.circle,
-                boxShadow: AppTheme.primaryShadow,
-              ),
-              child: const Icon(Icons.person_rounded, color: Colors.white, size: 24),
-            ),
-            const SizedBox(width: 14),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: GestureDetector(
+            onTap: _navigateToProfileSettings,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
               children: [
-                Text(
-                  "Welcome, ${currentUser.name}",
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textPrimary,
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    shape: BoxShape.circle,
+                    boxShadow: AppTheme.primaryShadow,
                   ),
+                  child: const Icon(Icons.person_rounded, color: Colors.white, size: 24),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  "${_getGreeting()} · Eye Care Active",
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Welcome, ${currentUser.name}",
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              "${_getGreeting()} · Profile Settings",
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primary,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Icon(Icons.chevron_right_rounded, size: 16, color: AppTheme.primary),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
+        const SizedBox(width: 12),
         Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.surface,
                 shape: BoxShape.circle,
               ),
@@ -550,6 +876,14 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        _buildActionCard(
+          icon: Icons.auto_awesome_rounded,
+          label: "Chat with Specz AI Assistant",
+          subtitle: "Ask about SPH/CYL, drop schedules & eye health tips",
+          gradient: AppTheme.primaryGradient,
+          onTap: _navigateToAiChat,
         ),
       ],
     );
@@ -702,13 +1036,15 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: const Row(
-                children: [
+              child: Row(
+                children: const [
                   Icon(Icons.add_circle_outline_rounded, size: 20, color: AppTheme.textHint),
                   SizedBox(width: 10),
-                  Text(
-                    "No prescription logged yet. Tap 'Add Prescription' above.",
-                    style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                  Expanded(
+                    child: Text(
+                      "No prescription logged yet. Tap 'Add Prescription' above.",
+                      style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+                    ),
                   ),
                 ],
               ),

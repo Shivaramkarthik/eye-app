@@ -10,6 +10,7 @@ class ProfileSettingsScreen extends StatefulWidget {
   final UserModel user;
   final ProfileModel profile;
   final VoidCallback onProfileDeleted;
+  final Function(ProfileModel updatedProfile)? onProfileUpdated;
   final VoidCallback onLogout;
 
   const ProfileSettingsScreen({
@@ -17,6 +18,7 @@ class ProfileSettingsScreen extends StatefulWidget {
     required this.user,
     required this.profile,
     required this.onProfileDeleted,
+    this.onProfileUpdated,
     required this.onLogout,
   }) : super(key: key);
 
@@ -30,35 +32,55 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late String _gender;
   late String _relationship;
 
+  final List<String> _genders = ['Male', 'Female', 'Other'];
+  final List<String> _relationships = ['Self', 'Child', 'Spouse', 'Parent', 'Other'];
+
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.profile.name);
     _dobController = TextEditingController(text: widget.profile.dob);
-    _gender = widget.profile.gender;
-    _relationship = widget.profile.relationship;
+
+    _gender = _genders.contains(widget.profile.gender) ? widget.profile.gender : 'Male';
+    _relationship = _relationships.contains(widget.profile.relationship) ? widget.profile.relationship : 'Self';
   }
 
   Future<void> _updateProfile() async {
-    final updated = ProfileModel(
-      id: widget.profile.id,
-      userId: widget.profile.userId,
-      name: _nameController.text.trim(),
-      dob: _dobController.text.trim(),
-      gender: _gender,
-      type: widget.profile.type,
-      relationship: _relationship,
-      prescriptionType: widget.profile.prescriptionType,
-      symptoms: widget.profile.symptoms,
-      blurredVisionType: widget.profile.blurredVisionType,
-      createdAt: widget.profile.createdAt,
-    );
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile name cannot be empty.")),
+      );
+      return;
+    }
 
-    await DatabaseService.instance.updateProfile(updated);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Profile details updated successfully!")),
-    );
+    try {
+      final updated = ProfileModel(
+        id: widget.profile.id,
+        userId: widget.profile.userId,
+        name: _nameController.text.trim(),
+        dob: _dobController.text.trim(),
+        gender: _gender,
+        type: widget.profile.type,
+        relationship: _relationship,
+        prescriptionType: widget.profile.prescriptionType,
+        symptoms: widget.profile.symptoms,
+        blurredVisionType: widget.profile.blurredVisionType,
+        createdAt: widget.profile.createdAt,
+      );
+
+      await DatabaseService.instance.updateProfile(updated);
+      widget.onProfileUpdated?.call(updated);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Profile details updated successfully!")),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error updating profile: $e")),
+      );
+    }
   }
 
   void _confirmDeleteProfile() {
@@ -118,7 +140,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
       appBar: AppBar(
         title: const Text("Settings & Profile"),
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -126,48 +147,68 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // User Account Header Card
+              // User Account & Plan Card
               Container(
-                padding: const EdgeInsets.all(18),
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  gradient: AppTheme.primaryGradient,
                   borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-                  boxShadow: AppTheme.softShadow,
+                  boxShadow: AppTheme.primaryShadow,
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      width: 52,
-                      height: 52,
-                      decoration: BoxDecoration(
-                        gradient: AppTheme.primaryGradient,
-                        shape: BoxShape.circle,
-                        boxShadow: AppTheme.primaryShadow,
-                      ),
-                      child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 26,
+                          backgroundColor: Colors.white.withOpacity(0.2),
+                          child: const Icon(Icons.person_rounded, color: Colors.white, size: 30),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.user.name,
+                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                              ),
+                              Text(
+                                widget.user.email,
+                                style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    const SizedBox(height: 16),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(widget.user.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: AppTheme.textPrimary)),
-                          const SizedBox(height: 2),
-                          Text(widget.user.email, style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-                          const SizedBox(height: 6),
+                          Text(
+                            "Plan: ${widget.user.plan.toUpperCase()}",
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              gradient: widget.user.isPlusActive ? AppTheme.warmGradient : null,
-                              color: widget.user.isPlusActive ? null : AppTheme.surface,
-                              borderRadius: BorderRadius.circular(12),
+                              color: widget.user.isPlusActive ? AppTheme.accent : Colors.white24,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              widget.user.isPlusActive ? "✨ Specz Plus Active" : "Free Plan (1 Profile Limit)",
+                              widget.user.isPlusActive ? "PLUS ACTIVE" : "FREE PLAN",
                               style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                color: widget.user.isPlusActive ? Colors.white : AppTheme.textSecondary,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                color: widget.user.isPlusActive ? AppTheme.textPrimary : Colors.white,
                               ),
                             ),
                           ),
@@ -205,14 +246,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     DropdownButtonFormField<String>(
                       value: _gender,
                       decoration: AppTheme.inputDecoration(label: "Gender", prefixIcon: Icons.person_outline_rounded),
-                      items: ['Male', 'Female', 'Other'].map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
+                      items: _genders.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                       onChanged: (val) => setState(() => _gender = val!),
                     ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       value: _relationship,
                       decoration: AppTheme.inputDecoration(label: "Relationship", prefixIcon: Icons.family_restroom_rounded),
-                      items: ['Self', 'Child', 'Spouse', 'Parent', 'Other'].map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
+                      items: _relationships.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
                       onChanged: (val) => setState(() => _relationship = val!),
                     ),
                     const SizedBox(height: 20),
@@ -220,21 +261,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     SizedBox(
                       width: double.infinity,
                       height: 48,
-                      child: DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: AppTheme.primaryGradient,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-                          boxShadow: AppTheme.primaryShadow,
+                      child: ElevatedButton(
+                        onPressed: _updateProfile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primary,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
                         ),
-                        child: ElevatedButton(
-                          onPressed: _updateProfile,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.transparent,
-                            shadowColor: Colors.transparent,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
-                          ),
-                          child: const Text("Update Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                        ),
+                        child: const Text("Update Profile", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                       ),
                     ),
                   ],
@@ -313,19 +346,22 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     required String title,
     required VoidCallback onTap,
   }) {
-    return ListTile(
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.primary.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: ListTile(
+        leading: Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppTheme.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
-        child: Icon(icon, color: AppTheme.primary, size: 20),
+        title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
+        trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textHint, size: 20),
+        onTap: onTap,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textHint, size: 20),
-      onTap: onTap,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
     );
   }
 }

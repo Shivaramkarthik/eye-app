@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
-
-
+import '../utils/app_theme.dart';
 import '../models/prescription_model.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
@@ -28,7 +27,7 @@ class PrescriptionUploadScreen extends StatefulWidget {
 
 class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
   final _doctorController = TextEditingController(text: "Dr. Ananya Sharma");
-  final _clinicController = TextEditingController(text: "Vision Eye Care Clinic");
+  final _clinicController = TextEditingController(text: "ClearVision Specialty Clinic");
   final _dateController = TextEditingController(text: DateTime.now().toString().split(' ')[0]);
 
   final _rightSphController = TextEditingController(text: "-2.25");
@@ -41,28 +40,176 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
 
   final _addPowerController = TextEditingController(text: "0.0");
   final _pdController = TextEditingController(text: "63.0");
-  final _notesController = TextEditingController(text: "Anti-reflective coating recommended.");
+  final _notesController = TextEditingController(text: "Anti-reflective coating recommended for computer use.");
 
   bool isOcrProcessing = false;
   bool showWarning = false;
-  int uploadQueueCount = 0; // Batch upload counter
+  int uploadQueueCount = 0;
+
+  void _openCameraScanModal() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.75,
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F172A),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              child: Column(
+                children: [
+                  const SizedBox(height: 16),
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Camera Prescription Scanner",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: Colors.white),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    "Align prescription paper inside frame for AI extraction",
+                    style: TextStyle(fontSize: 12, color: Colors.white70),
+                  ),
+                  const SizedBox(height: 20),
+                  Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 24),
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: AppTheme.primary, width: 2),
+                      ),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Positioned.fill(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
+                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
+                                    ],
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
+                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          if (isOcrProcessing)
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                SizedBox(width: 48, height: 48, child: CircularProgressIndicator(color: AppTheme.primary, strokeWidth: 3)),
+                                SizedBox(height: 16),
+                                Text("Analyzing with Gemini AI OCR...", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                              ],
+                            )
+                          else
+                            Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.center_focus_strong_rounded, size: 64, color: Colors.white38),
+                                SizedBox(height: 12),
+                                Text("Tap Shutter Button to Snap", style: TextStyle(color: Colors.white60, fontSize: 13)),
+                              ],
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.flash_on_rounded, color: Colors.white70),
+                          onPressed: () {},
+                        ),
+                        GestureDetector(
+                          onTap: isOcrProcessing
+                              ? null
+                              : () async {
+                                  setModalState(() => isOcrProcessing = true);
+                                  final result = await AiOcrService.instance.extractPrescriptionData("camera_photo.jpg");
+                                  if (!mounted) return;
+                                  setState(() {
+                                    if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
+                                    if (result.rightCyl != null) _rightCylController.text = result.rightCyl.toString();
+                                    if (result.rightAxis != null) _rightAxisController.text = result.rightAxis.toString();
+                                    if (result.leftSph != null) _leftSphController.text = result.leftSph.toString();
+                                    if (result.leftCyl != null) _leftCylController.text = result.leftCyl.toString();
+                                    if (result.leftAxis != null) _leftAxisController.text = result.leftAxis.toString();
+                                    if (result.pd != null) _pdController.text = result.pd.toString();
+                                    if (result.doctorName.isNotEmpty) _doctorController.text = result.doctorName;
+                                    if (result.clinicName.isNotEmpty) _clinicController.text = result.clinicName;
+                                    if (result.notes.isNotEmpty) _notesController.text = result.notes;
+                                  });
+                                  setModalState(() => isOcrProcessing = false);
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text("Prescription photo scanned & numbers auto-filled!")),
+                                  );
+                                },
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppTheme.primary,
+                              border: Border.all(color: Colors.white, width: 4),
+                              boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.4), blurRadius: 16)],
+                            ),
+                            child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 28),
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.photo_library_rounded, color: Colors.white70),
+                          onPressed: () async {
+                            Navigator.pop(ctx);
+                            _runAiOcrScan();
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   Future<void> _runAiOcrScan() async {
     setState(() => isOcrProcessing = true);
-
     final result = await AiOcrService.instance.extractPrescriptionData("mock_image.jpg");
-
     if (!mounted) return;
     setState(() {
       isOcrProcessing = false;
       if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
       if (result.rightCyl != null) _rightCylController.text = result.rightCyl.toString();
       if (result.rightAxis != null) _rightAxisController.text = result.rightAxis.toString();
-
       if (result.leftSph != null) _leftSphController.text = result.leftSph.toString();
       if (result.leftCyl != null) _leftCylController.text = result.leftCyl.toString();
       if (result.leftAxis != null) _leftAxisController.text = result.leftAxis.toString();
-
       if (result.pd != null) _pdController.text = result.pd.toString();
       if (result.doctorName.isNotEmpty) _doctorController.text = result.doctorName;
       if (result.clinicName.isNotEmpty) _clinicController.text = result.clinicName;
@@ -70,11 +217,10 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Prescription extracted with Gemini AI OCR! Please verify numbers.")),
+      const SnackBar(content: Text("Prescription extracted with Gemini AI OCR!")),
     );
   }
 
-  /// Optimized batch upload handler capable of processing 10+ uploads seamlessly
   Future<void> _savePrescription() async {
     double? rSph = double.tryParse(_rightSphController.text);
     double? rCyl = double.tryParse(_rightCylController.text);
@@ -112,50 +258,13 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     Navigator.pop(context);
   }
 
-  /// Simulate batch processing 10+ consecutive prescription uploads
-  Future<void> _simulateBatchUpload10() async {
-    setState(() => uploadQueueCount = 10);
-    for (int i = 1; i <= 10; i++) {
-      await Future.delayed(const Duration(milliseconds: 150));
-      final batchPresc = PrescriptionModel(
-        id: "batch_presc_${DateTime.now().millisecondsSinceEpoch}_$i",
-        profileId: widget.profile.id,
-        userId: widget.user.id,
-        prescriptionDate: "2026-08-0$i",
-        doctorName: "Batch Doctor #$i",
-        clinicName: "Batch Eye Clinic",
-        rightSph: -2.0 - (i * 0.1),
-        rightCyl: -0.5,
-        rightAxis: 180,
-        leftSph: -2.25 - (i * 0.1),
-        leftCyl: -0.5,
-        leftAxis: 175,
-        addPower: 0.0,
-        pd: 63.0,
-        isCurrent: (i == 10),
-        createdAt: DateTime.now().toIso8601String(),
-      );
-      await DatabaseService.instance.insertPrescription(batchPresc);
-      if (!mounted) return;
-      setState(() => uploadQueueCount = 10 - i);
-    }
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Processed 10 consecutive prescription uploads smoothly!")),
-    );
-    widget.onSaved();
-    Navigator.pop(context);
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: AppTheme.scaffoldBg,
       appBar: AppBar(
         title: Text("Add Prescription (${widget.profile.name})", style: const TextStyle(fontWeight: FontWeight.bold)),
         backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF0F172A),
-        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -163,48 +272,46 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // AI Scan Button Card
+              // AI Camera Scan Banner Card
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE0F2FE),
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFBAE6FD)),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: const Icon(LucideIcons.camera, size: 24, color: Color(0xFF0284C7)),
+                      child: const Icon(Icons.camera_alt_rounded, size: 24, color: AppTheme.primary),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-
-                          const Text("Scan Prescription Photo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFF0369A1))),
-                          const SizedBox(height: 2),
-                          const Text("Extract SPH, CYL & Axis automatically using Gemini AI", style: TextStyle(fontSize: 11, color: Color(0xFF0284C7))),
+                        children: const [
+                          Text("Scan with Camera / Gallery", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: AppTheme.textPrimary)),
+                          SizedBox(height: 2),
+                          Text("Extract SPH, CYL & Axis automatically with AI OCR", style: TextStyle(fontSize: 11, color: AppTheme.textSecondary)),
                         ],
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: isOcrProcessing ? null : _runAiOcrScan,
+                    ElevatedButton.icon(
+                      onPressed: _openCameraScanModal,
+                      icon: const Icon(Icons.camera_alt_rounded, size: 16),
+                      label: const Text("Scan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0284C7),
+                        backgroundColor: AppTheme.primary,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
-                      child: isOcrProcessing
-                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Scan", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
               const MedicalDisclaimerBanner(),
               const SizedBox(height: 16),
 
@@ -214,130 +321,65 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
               ],
 
               // Right Eye (OD) Section
-              const Text("Right Eye (OD)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              const Text("Right Eye (OD)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _rightSphController,
-                      decoration: const InputDecoration(labelText: "SPH (Sphere)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _rightSphController, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: AppTheme.inputDecoration(label: "SPH (Sphere)"))),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _rightCylController,
-                      decoration: const InputDecoration(labelText: "CYL (Cylinder)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _rightCylController, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: AppTheme.inputDecoration(label: "CYL (Cylinder)"))),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _rightAxisController,
-                      decoration: const InputDecoration(labelText: "Axis (°)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _rightAxisController, keyboardType: TextInputType.number, decoration: AppTheme.inputDecoration(label: "Axis (°)"))),
                 ],
               ),
-              const SizedBox(height: 18),
+
+              const SizedBox(height: 20),
 
               // Left Eye (OS) Section
-              const Text("Left Eye (OS)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+              const Text("Left Eye (OS)", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary)),
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _leftSphController,
-                      decoration: const InputDecoration(labelText: "SPH (Sphere)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _leftSphController, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: AppTheme.inputDecoration(label: "SPH (Sphere)"))),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _leftCylController,
-                      decoration: const InputDecoration(labelText: "CYL (Cylinder)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _leftCylController, keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true), decoration: AppTheme.inputDecoration(label: "CYL (Cylinder)"))),
                   const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _leftAxisController,
-                      decoration: const InputDecoration(labelText: "Axis (°)", border: OutlineInputBorder()),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _leftAxisController, keyboardType: TextInputType.number, decoration: AppTheme.inputDecoration(label: "Axis (°)"))),
                 ],
               ),
-              const SizedBox(height: 18),
+
+              const SizedBox(height: 20),
 
               // Additional Details
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _addPowerController,
-                      decoration: const InputDecoration(labelText: "Add Power", border: OutlineInputBorder()),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextField(
-                      controller: _pdController,
-                      decoration: const InputDecoration(labelText: "PD (mm)", border: OutlineInputBorder()),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: _addPowerController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: AppTheme.inputDecoration(label: "ADD Power"))),
+                  const SizedBox(width: 12),
+                  Expanded(child: TextField(controller: _pdController, keyboardType: const TextInputType.numberWithOptions(decimal: true), decoration: AppTheme.inputDecoration(label: "PD (mm)"))),
                 ],
               ),
+
               const SizedBox(height: 14),
-              TextField(
-                controller: _doctorController,
-                decoration: const InputDecoration(labelText: "Doctor Name", border: OutlineInputBorder()),
-              ),
+              TextField(controller: _doctorController, decoration: AppTheme.inputDecoration(label: "Doctor Name", prefixIcon: Icons.badge_rounded)),
               const SizedBox(height: 14),
-              TextField(
-                controller: _clinicController,
-                decoration: const InputDecoration(labelText: "Clinic / Hospital Name", border: OutlineInputBorder()),
-              ),
+              TextField(controller: _clinicController, decoration: AppTheme.inputDecoration(label: "Clinic / Hospital Name", prefixIcon: Icons.local_hospital_rounded)),
               const SizedBox(height: 14),
-              TextField(
-                controller: _notesController,
-                maxLines: 2,
-                decoration: const InputDecoration(labelText: "Notes & Advice", border: OutlineInputBorder()),
-              ),
-              const SizedBox(height: 24),
+              TextField(controller: _dateController, decoration: AppTheme.inputDecoration(label: "Prescription Date (YYYY-MM-DD)", prefixIcon: Icons.calendar_today_rounded)),
+              const SizedBox(height: 14),
+              TextField(controller: _notesController, maxLines: 2, decoration: AppTheme.inputDecoration(label: "Notes & Recommendations", prefixIcon: Icons.notes_rounded)),
+
+              const SizedBox(height: 28),
 
               SizedBox(
                 width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
+                height: 52,
+                child: ElevatedButton(
                   onPressed: _savePrescription,
-                  icon: const Icon(LucideIcons.save, color: Colors.white),
-                  label: const Text("Save Prescription", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0284C7),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primary, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium))),
+                  child: const Text("Save Prescription Record", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
-
-              const SizedBox(height: 12),
-              Center(
-                child: TextButton.icon(
-                  onPressed: uploadQueueCount > 0 ? null : _simulateBatchUpload10,
-                  icon: const Icon(LucideIcons.layers, size: 16),
-                  label: Text(
-                    uploadQueueCount > 0 ? "Uploading Batch ($uploadQueueCount remaining)..." : "Test Batch Upload (10 Prescriptions)",
-                    style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                  ),
-                ),
-              ),
+              const SizedBox(height: 24),
             ],
           ),
         ),

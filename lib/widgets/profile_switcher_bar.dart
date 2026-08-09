@@ -33,27 +33,34 @@ class ProfileSwitcherBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
+            Expanded(
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(LucideIcons.users, size: 14, color: AppTheme.primary),
                   ),
-                  child: const Icon(LucideIcons.users, size: 14, color: AppTheme.primary),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  "$activeCount of $maxCapacity profiles",
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "$activeCount of $maxCapacity profiles",
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(

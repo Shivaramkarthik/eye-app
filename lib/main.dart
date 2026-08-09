@@ -1,23 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/app_theme.dart';
 import 'models/user_model.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
+import 'services/database_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.dark,
     systemNavigationBarColor: Colors.white,
   ));
-  runApp(const SpeczApp());
+
+  // Instant Parallel Initialization
+  UserModel? savedUser;
+  try {
+    final results = await Future.wait([
+      SharedPreferences.getInstance(),
+      DatabaseService.instance.database,
+    ]);
+    final prefs = results[0] as SharedPreferences;
+    final savedUserId = prefs.getString('active_user_id');
+    if (savedUserId != null) {
+      savedUser = await DatabaseService.instance.getUser(savedUserId);
+    }
+  } catch (_) {}
+
+  runApp(SpeczApp(initialUser: savedUser));
 }
 
 class SpeczApp extends StatefulWidget {
-  const SpeczApp({Key? key}) : super(key: key);
+  final UserModel? initialUser;
+
+  const SpeczApp({Key? key, this.initialUser}) : super(key: key);
 
   @override
   State<SpeczApp> createState() => _SpeczAppState();
@@ -29,15 +48,15 @@ class _SpeczAppState extends State<SpeczApp> {
   @override
   void initState() {
     super.initState();
-    // Default logged in user for Karthik
-    currentUser = UserModel(
-      id: 'user_default',
-      email: 'karthik@specz.co',
-      name: 'Karthik',
-      plan: 'free',
-      status: 'free',
-      createdAt: DateTime.now().toIso8601String(),
-    );
+    currentUser = widget.initialUser;
+  }
+
+  void _handleLogout() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('active_user_id');
+    } catch (_) {}
+    setState(() => currentUser = null);
   }
 
   @override
@@ -124,11 +143,17 @@ class _SpeczAppState extends State<SpeczApp> {
       ),
       home: currentUser == null
           ? AuthScreen(
-              onLoginSuccess: (user) => setState(() => currentUser = user),
+              onLoginSuccess: (user) async {
+                try {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('active_user_id', user.id);
+                } catch (_) {}
+                setState(() => currentUser = user);
+              },
             )
           : DashboardScreen(
               user: currentUser!,
-              onLogout: () => setState(() => currentUser = null),
+              onLogout: _handleLogout,
             ),
     );
   }

@@ -131,70 +131,6 @@ class DatabaseService {
         createdAt TEXT NOT NULL
       )
     ''');
-
-    // Seed default user & profile for Karthik
-    final now = DateTime.now().toIso8601String();
-    await db.insert('users', {
-      'id': 'user_default',
-      'email': 'karthik@specz.co',
-      'name': 'Karthik',
-      'plan': 'free',
-      'status': 'free',
-      'createdAt': now,
-    });
-
-    await db.insert('profiles', {
-      'id': 'prof_karthik',
-      'userId': 'user_default',
-      'name': 'Karthik',
-      'dob': '1992-05-14',
-      'gender': 'Male',
-      'type': 'Adult',
-      'relationship': 'Self',
-      'prescriptionType': 'Myopia',
-      'symptoms': '["Blurred vision","Eye strain"]',
-      'blurredVisionType': 'Distance',
-      'isArchived': 0,
-      'createdAt': now,
-    });
-
-    // Seed initial prescription
-    await db.insert('prescriptions', {
-      'id': 'presc_1',
-      'profileId': 'prof_karthik',
-      'userId': 'user_default',
-      'prescriptionDate': '2026-06-15',
-      'doctorName': 'Dr. Ananya Sharma',
-      'clinicName': 'Vision Eye Care Institute',
-      'rightSph': -2.25,
-      'rightCyl': -0.75,
-      'rightAxis': 180,
-      'leftSph': -2.50,
-      'leftCyl': -0.50,
-      'leftAxis': 175,
-      'addPower': 0.0,
-      'pd': 63.0,
-      'notes': 'Anti-reflective coating recommended for computer work.',
-      'isCurrent': 1,
-      'createdAt': now,
-    });
-
-    // Seed initial medicine
-    await db.insert('medicines', {
-      'id': 'med_1',
-      'profileId': 'prof_karthik',
-      'userId': 'user_default',
-      'name': 'Refresh Tears Lubricant Drop',
-      'type': 'Drop',
-      'dosage': '1 drop in both eyes',
-      'startDate': '2026-08-01',
-      'times': '["09:00 AM","09:00 PM"]',
-      'tone': 'Soft Chime',
-      'vibrationEnabled': 1,
-      'active': 1,
-      'completedLogs': '[]',
-      'createdAt': now,
-    });
   }
 
   // User operations
@@ -299,6 +235,16 @@ class DatabaseService {
   Future<void> insertMedicine(MedicineModel medicine) async {
     final db = await database;
     await db.insert('medicines', medicine.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> saveUser(UserModel user) async {
+    final db = await database;
+    await db.insert('users', user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<void> deleteMedicine(String id) async {
+    final db = await database;
+    await db.delete('medicines', where: 'id = ?', whereArgs: [id]);
   }
 
   Future<void> toggleMedicineLog(String medicineId, String logKey) async {
