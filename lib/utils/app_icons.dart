@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+
+class LucideIcons {
+  static const IconData user = Icons.person_outline;
+  static const IconData userCheck = Icons.person;
+  static const IconData users = Icons.group_outlined;
+  static const IconData baby = Icons.child_care;
+  static const IconData home = Icons.home_outlined;
+  static const IconData droplet = Icons.water_drop_outlined;
+  static const IconData droplets = Icons.water_drop;
+  static const IconData fileText = Icons.description_outlined;
+  static const IconData fileSpreadsheet = Icons.feed_outlined;
+  static const IconData settings = Icons.settings_outlined;
+  static const IconData camera = Icons.camera_alt_outlined;
+  static const IconData crown = Icons.workspace_premium;
+  static const IconData plus = Icons.add;
+  static const IconData plusCircle = Icons.add_circle_outline;
+  static const IconData lock = Icons.lock_outline;
+  static const IconData checkCircle = Icons.check_circle_outline;
+  static const IconData checkCircle2 = Icons.check_circle;
+  static const IconData clock = Icons.access_time;
+  static const IconData volume2 = Icons.volume_up_outlined;
+  static const IconData vibrate = Icons.vibration;
+  static const IconData pill = Icons.medication_outlined;
+  static const IconData activity = Icons.ssid_chart;
+  static const IconData sparkles = Icons.auto_awesome;
+  static const IconData alertTriangle = Icons.warning_amber_rounded;
+  static const IconData shieldAlert = Icons.shield_outlined;
+  static const IconData globe = Icons.language;
+  static const IconData trash2 = Icons.delete_forever_outlined;
+  static const IconData logOut = Icons.logout;
+  static const IconData eye = Icons.visibility;
+  static const IconData glasses = Icons.remove_red_eye_outlined;
+  static const IconData info = Icons.info_outline;
+  static const IconData mail = Icons.mail_outline;
+  static const IconData userCheck2 = Icons.check;
+  static const IconData calendar = Icons.calendar_today_outlined;
+  static const IconData save = Icons.save_outlined;
+  static const IconData layers = Icons.layers_outlined;
+  static const IconData creditCard = Icons.credit_card;
+  static const IconData bell = Icons.notifications_none;
+  static const IconData chevronRight = Icons.chevron_right;
+  static const IconData helpCircle = Icons.help_outline;
+}
