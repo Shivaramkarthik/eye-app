@@ -1,70 +1,72 @@
 # SPECZ.CO V2 — ARCHITECTURE SPECIFICATION
 
 ## Overview
-Specz.co is a local-first digital eye-care companion built with Flutter 3.x, Dart 3.x, Material 3, and SQLite (`sqflite`). It provides family profile eye care management, prescription handling with OCR extraction & confirmation, OS-level medication alarms, explainable Vision Care Scoring, server-verifiable entitlement rules, offline PDF generation, and local data security.
+Specz.co is a local-first digital eye-care companion built with Flutter 3.x, Dart 3.x, Material 3, and SQLite (`sqflite`), connected to a production FastAPI backend (`api.specz.co`) with PostgreSQL 15, Redis, S3 object storage, Razorpay payment verification, and offline-first cloud synchronization.
 
 ---
 
-## Directory & File Responsibilities
+## Architecture Diagram
 
-```
-lib/
-├── main.dart                      # Application entry point, theme & route setup
-├── app.dart                       # Global MaterialApp & configuration
-├── core/
-│   ├── constants/                 # App colors, sizes, and strings
-│   ├── errors/                    # Centralized error exceptions
-│   ├── routing/                   # Route transitions & navigation handlers
-│   └── security/                  # Encryption & secure key storage
-├── data/
-│   ├── local/
-│   │   ├── database_service.dart  # SQLite database instance & initialization
-│   │   ├── migration_manager.dart # Schema V2 migration & transaction safety
-│   │   └── dao/                   # Isolated Data Access Objects
-│   │       ├── user_dao.dart
-│   │       ├── profile_dao.dart
-│   │       ├── prescription_dao.dart
-│   │       ├── medication_dao.dart
-│   │       ├── score_dao.dart
-│   │       ├── report_dao.dart
-│   │       └── subscription_dao.dart
-│   └── repositories/
-│       ├── profile_repository.dart
-│       ├── prescription_repository.dart
-│       ├── medication_repository.dart
-│       ├── score_repository.dart
-│       └── subscription_repository.dart
-├── models/
-│   ├── user_model.dart
-│   ├── profile_model.dart
-│   ├── prescription_model.dart
-│   ├── prescription_eye_value_model.dart
-│   ├── medication_model.dart
-│   ├── medication_schedule_model.dart
-│   ├── medication_log_model.dart
-│   ├── eye_care_score_model.dart
-│   ├── ai_summary_model.dart
-│   ├── doctor_question_model.dart
-│   ├── report_model.dart
-│   └── subscription_model.dart
-├── services/
-│   ├── notification_service.dart  # flutter_local_notifications engine
-│   ├── notification_scheduler.dart# OS alarm scheduler & reschedule manager
-│   ├── ai_ocr_service.dart        # Vision OCR extraction & score engine
-│   ├── pdf_service.dart           # Offline PDF report builder
-│   ├── entitlement_service.dart   # Subscription profile limits (1 free / 5 plus)
-│   ├── razorpay_service.dart      # Payment gateway checkout
-│   ├── audio_haptic_service.dart   # Audio/vibration alarm feedback
-│   └── i18n_service.dart          # Multilingual translation dictionary
-├── widgets/                       # Reusable visual components & dialogs
-└── l10n/                          # Localization string catalogs
+```text
+                  SPECZ.CO FLUTTER APPLICATION
+                               │
+       ┌───────────────────────┴───────────────────────┐
+       │                                               │
+   OFFLINE                                           ONLINE
+       │                                               │
+       ▼                                               ▼
+ local SQLite                                   FastAPI API Server
+ (Local Source of Truth)                        (api.specz.co)
+       │                                               │
+       │                                               ▼
+       └────────────── Sync Queue Engine ────────── PostgreSQL 15
 ```
 
 ---
 
-## Architecture Principles
-1. **Layer Separation**: No UI screen executes SQL queries directly. Screens delegate to Controllers/Repositories, which query DAOs over SQLite.
-2. **OS-Level Alarm Engine**: Medication reminders use `flutter_local_notifications` with timezone support (`timezone` package). Alarms trigger even when the application is backgrounded or killed.
-3. **Normalized Relational Database**: Arrays (symptoms, medication schedules, logs, eye values) are stored in normalized tables with strict foreign keys (`ON DELETE CASCADE`).
-4. **Human Review & Prescriptions**: Missing CYL is stored as `NULL` / `MISSING` and never silently defaults to `0.0`. OCR extraction presents a structured confirmation dialog prior to saving.
-5. **Vision Care Score (0–100)**: Component-based care index (Prescription completeness, stability, adherence, follow-up recency, profile completeness, care routine consistency, history quality) with version tracking (`algorithm_version: 2`) and non-diagnostic disclaimers.
+## Component Responsibilities
+
+```text
+eye app/
+├── backend/                       # Production FastAPI Cloud Infrastructure
+│   ├── app/
+│   │   ├── main.py                # FastAPI Application & Global Handlers
+│   │   ├── api/v1/                # Endpoint Routers (Auth, Profiles, Sync, AI, Webhooks)
+│   │   ├── core/                  # Config, Security & JWT Engine
+│   │   ├── database/              # Async & Sync SQLAlchemy Engine
+│   │   ├── models/                # PostgreSQL ORM Entities
+│   │   ├── schemas/               # Pydantic Request/Response DTOs
+│   │   └── services/              # Auth, Sync, Razorpay, AI, S3 Services
+│   ├── migrations/                # Alembic Database Migrations
+│   ├── tests/                     # Pytest Integration Suite
+│   ├── Dockerfile                 # Multi-Stage Production Container Build
+│   └── docker-compose.yml         # Dev/Staging Infrastructure Setup
+│
+├── lib/                           # Flutter Application
+│   ├── core/
+│   │   └── config/backend_config.dart # Dev / Staging / Prod Base URLs
+│   ├── data/
+│   │   ├── local/
+│   │   │   ├── database_service.dart  # SQLite Database Service
+│   │   │   ├── sync_queue.dart        # Offline Sync Queue Engine
+│   │   │   └── dao/                   # Local DAOs
+│   │   ├── remote/                    # Dio HTTP API Clients
+│   │   │   ├── api_client.dart        # Dio Client with JWT Refresh Interceptor
+│   │   │   ├── auth_api.dart
+│   │   │   ├── profile_api.dart
+│   │   │   ├── prescription_api.dart
+│   │   │   ├── medication_api.dart
+│   │   │   ├── sync_api.dart
+│   │   │   ├── subscription_api.dart
+│   │   │   └── ai_api.dart
+│   │   └── repositories/             # Offline-First Repository Pattern
+```
+
+---
+
+## Core Architecture Principles
+1. **Offline-First SQLite**: Local SQLite remains the primary source of truth. All reads and writes occur locally first.
+2. **Asynchronous Sync Queue**: Operations are enqueued in SQLite `sync_queue` table and flushed to `/api/v1/sync` when internet is restored.
+3. **Server-Authoritative Entitlements**: Razorpay subscriptions and profile capacity limits (1 Free / 5 Plus) are strictly enforced by FastAPI server.
+4. **Isolated AI & Payment Keys**: All secrets are stored exclusively on backend `.env`.
+5. **Medical Data Nuances**: Cylinder power NULL is distinguished from 0.00. OCR output requires human confirmation prior to database save.

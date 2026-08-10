@@ -1,27 +1,26 @@
 # SPECZ.CO V2 — SECURITY SPECIFICATION
 
-## Security Architecture & Best Practices
+## 1. Authentication & Token Management
+* Mobile JWT tokens stored in platform-encrypted storage using `flutter_secure_storage`.
+* Short-lived access tokens (30 minutes) + rotating refresh tokens (30 days).
+* Passwords hashed using Argon2 / Bcrypt. Plaintext passwords never stored or logged.
 
-1. **Authentication Token Management**
-   - Active user session details are stored securely using platform secure storage (`flutter_secure_storage`).
-   - Plain text `SharedPreferences` is limited strictly to UI preferences.
+## 2. Strict IDOR Multi-Tenant Protection
+* Every API endpoint enforces user ownership checks deriving `user_id` strictly from JWT token:
+  ```sql
+  SELECT * FROM prescriptions WHERE profile_id = :id AND user_id = :authenticated_user_id;
+  ```
+* User A cannot view, mutate, or delete User B's profiles, prescriptions, medications, scores, or reports.
 
-2. **Data Access & Query Ownership Enforcements**
-   - Every DAOs operation enforces multi-tenant ownership checks:
-     ```sql
-     SELECT * FROM prescriptions WHERE profile_id = ? AND user_id = ?
-     ```
-   - User A cannot access or mutate Profile B records.
+## 3. Server-Authoritative Entitlements
+* Plan capacity limits (1 Free / 5 Plus) enforced server-side. Local variable tampering cannot unlock premium limits without valid Razorpay HMAC signature verification.
 
-3. **Local Medical Data Protection**
-   - Temporary prescription images are stored in application-private directories and deleted immediately after processing when no longer required.
-   - Sensitive medical values (SPH, CYL, diagnosis summaries) are excluded from release debug logs.
+## 4. Webhook & Payment Verification
+* All Razorpay payments verified using HMAC-SHA256 signature verification.
+* Razorpay Webhooks verified with `RAZORPAY_WEBHOOK_SECRET` and processed idempotently.
 
-4. **Account Deletion Flow**
-   - Confirmation modal verifies intent.
-   - Cascading local wipe purges all profiles, prescriptions, eye drop schedules, logs, scores, and reports.
-   - Invalidates local session tokens.
-
-5. **Entitlement Protection**
-   - Client applications consume server entitlement state (`subscriptions` table).
-   - Local variable tampering (e.g. `plan = "plus"`) does not grant premium profile limits without valid subscription record verification.
+## 5. Medical Safety & Privacy Boundaries
+* AI outputs explicitly disclaimed as non-diagnostic informational summaries.
+* Cloud OCR outputs require human confirmation prior to database save.
+* Medical data, email, phone, and tokens excluded from analytics logs.
+* Private S3 object storage uses pre-signed upload/download URLs with strict expiration timeouts.
