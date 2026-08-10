@@ -231,7 +231,22 @@ class DatabaseMigrationManager {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
       )
     ''');
+
+    // sync_queue
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS sync_queue (
+        id TEXT PRIMARY KEY,
+        entity_type TEXT NOT NULL,
+        entity_id TEXT NOT NULL,
+        operation TEXT NOT NULL,
+        payload TEXT NOT NULL,
+        attempt_count INTEGER NOT NULL DEFAULT 0,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        created_at TEXT NOT NULL
+      )
+    ''');
   }
+
 
   static Future<void> migrateFromV1ToV2(Database db) async {
     // Transactional safety during migration
