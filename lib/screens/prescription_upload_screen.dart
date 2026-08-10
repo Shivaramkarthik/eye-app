@@ -8,6 +8,7 @@ import '../services/ai_ocr_service.dart';
 import '../services/database_service.dart';
 import '../widgets/missing_sph_warning_banner.dart';
 import '../widgets/medical_disclaimer_banner.dart';
+import '../widgets/prescription_confirmation_dialog.dart';
 
 class PrescriptionUploadScreen extends StatefulWidget {
   final UserModel user;
@@ -163,9 +164,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                                   });
                                   setModalState(() => isOcrProcessing = false);
                                   Navigator.pop(ctx);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text("Prescription photo scanned & numbers auto-filled!")),
-                                  );
+                                  _showOcrConfirmationDialog(result);
                                 },
                           child: Container(
                             width: 64,
@@ -174,7 +173,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                               shape: BoxShape.circle,
                               color: AppTheme.primary,
                               border: Border.all(color: Colors.white, width: 4),
-                              boxShadow: [BoxShadow(color: AppTheme.primary.withOpacity(0.4), blurRadius: 16)],
+                              boxShadow: [BoxShadow(color: AppTheme.primary.withValues(alpha: 0.4), blurRadius: 16)],
                             ),
                             child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 28),
                           ),
@@ -200,32 +199,45 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
 
   Future<void> _runAiOcrScan() async {
     setState(() => isOcrProcessing = true);
-    final result = await AiOcrService.instance.extractPrescriptionData("mock_image.jpg");
+    final imagePath = _imageFile?.path ?? "camera_scan.jpg";
+    final result = await AiOcrService.instance.extractPrescriptionData(imagePath);
     if (!mounted) return;
-    setState(() {
-      isOcrProcessing = false;
-      if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
-      if (result.rightCyl != null) _rightCylController.text = result.rightCyl.toString();
-      if (result.rightAxis != null) _rightAxisController.text = result.rightAxis.toString();
-      if (result.leftSph != null) _leftSphController.text = result.leftSph.toString();
-      if (result.leftCyl != null) _leftCylController.text = result.leftCyl.toString();
-      if (result.leftAxis != null) _leftAxisController.text = result.leftAxis.toString();
-      if (result.pd != null) _pdController.text = result.pd.toString();
-      if (result.doctorName.isNotEmpty) _doctorController.text = result.doctorName;
-      if (result.clinicName.isNotEmpty) _clinicController.text = result.clinicName;
-      if (result.notes.isNotEmpty) _notesController.text = result.notes;
-    });
+    setState(() => isOcrProcessing = false);
+    _showOcrConfirmationDialog(result);
+  }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Prescription extracted with Gemini AI OCR!")),
+  void _showOcrConfirmationDialog(AiOcrResult result) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PrescriptionConfirmationDialog(
+        ocrResult: result,
+        onConfirmed: (confirmedData) {
+          setState(() {
+            if (confirmedData['rightSph'] != null) _rightSphController.text = confirmedData['rightSph'].toString();
+            if (confirmedData['rightCyl'] != null) _rightCylController.text = confirmedData['rightCyl'].toString();
+            if (confirmedData['rightAxis'] != null) _rightAxisController.text = confirmedData['rightAxis'].toString();
+
+            if (confirmedData['leftSph'] != null) _leftSphController.text = confirmedData['leftSph'].toString();
+            if (confirmedData['leftCyl'] != null) _leftCylController.text = confirmedData['leftCyl'].toString();
+            if (confirmedData['leftAxis'] != null) _leftAxisController.text = confirmedData['leftAxis'].toString();
+
+            if (confirmedData['addPower'] != null) _addPowerController.text = confirmedData['addPower'].toString();
+            if (confirmedData['pd'] != null) _pdController.text = confirmedData['pd'].toString();
+
+            if ((confirmedData['doctorName'] as String?)?.isNotEmpty == true) _doctorController.text = confirmedData['doctorName'];
+            if ((confirmedData['clinicName'] as String?)?.isNotEmpty == true) _clinicController.text = confirmedData['clinicName'];
+          });
+        },
+      ),
     );
   }
 
   Future<void> _savePrescription() async {
     double? rSph = double.tryParse(_rightSphController.text.trim());
-    double rCyl = double.tryParse(_rightCylController.text.trim()) ?? 0.0;
+    double? rCyl = double.tryParse(_rightCylController.text.trim());
     double? lSph = double.tryParse(_leftSphController.text.trim());
-    double lCyl = double.tryParse(_leftCylController.text.trim()) ?? 0.0;
+    double? lCyl = double.tryParse(_leftCylController.text.trim());
 
     if (rSph == null || lSph == null) {
       setState(() => showWarning = true);

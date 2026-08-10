@@ -7,6 +7,7 @@ import '../models/profile_model.dart';
 import '../models/user_model.dart';
 import '../services/audio_haptic_service.dart';
 import '../services/database_service.dart';
+import '../services/notification_scheduler.dart';
 
 class MedicineTrackerScreen extends StatefulWidget {
   final UserModel user;
@@ -27,7 +28,6 @@ class MedicineTrackerScreen extends StatefulWidget {
 class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
   List<MedicineModel> medicines = [];
   bool isLoading = true;
-  Timer? _alarmTimer;
 
   final _nameController = TextEditingController();
   final _dosageController = TextEditingController(text: "1 drop in both eyes");
@@ -40,43 +40,13 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
   void initState() {
     super.initState();
     _loadMedicines();
-    _startAlarmListener();
   }
 
   @override
   void dispose() {
-    _alarmTimer?.cancel();
     _nameController.dispose();
     _dosageController.dispose();
     super.dispose();
-  }
-
-  void _startAlarmListener() {
-    _alarmTimer = Timer.periodic(const Duration(seconds: 15), (timer) {
-      _checkDueAlarms();
-    });
-  }
-
-  void _checkDueAlarms() async {
-    final now = DateTime.now();
-    final tod = TimeOfDay.fromDateTime(now);
-    final currentTimeStr = _formatTimeOfDay(tod);
-    final todayStr = now.toString().split(' ')[0];
-
-    for (var med in medicines) {
-      if (!med.active) continue;
-      for (var t in med.times) {
-        if (t == currentTimeStr && !med.isLoggedFor(todayStr, t)) {
-          await AudioHapticService.instance.playNotificationTone(med.tone);
-          if (med.vibrationEnabled) {
-            await AudioHapticService.instance.triggerVibration();
-          }
-          if (!mounted) return;
-          _showAlarmAlertDialog(med, t);
-          break;
-        }
-      }
-    }
   }
 
   void _showAlarmAlertDialog(MedicineModel med, String timeKey) {
@@ -169,6 +139,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
     );
 
     await DatabaseService.instance.insertMedicine(med);
+    await NotificationScheduler.instance.scheduleMedicine(med);
     _nameController.clear();
     if (!mounted) return;
     Navigator.pop(context); // close modal
@@ -497,14 +468,15 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                                   ],
                                 ),
                               ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textHint, size: 20),
-                                onPressed: () async {
-                                  await DatabaseService.instance.deleteMedicine(med.id);
-                                  _loadMedicines();
-                                  widget.onUpdated();
-                                },
-                              ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.textHint, size: 20),
+                                  onPressed: () async {
+                                    await NotificationScheduler.instance.cancelMedicine(med);
+                                    await DatabaseService.instance.deleteMedicine(med.id);
+                                    _loadMedicines();
+                                    widget.onUpdated();
+                                  },
+                                ),
                             ],
                           ),
                           const SizedBox(height: 16),

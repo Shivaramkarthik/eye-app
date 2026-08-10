@@ -133,6 +133,54 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     );
   }
 
+  void _confirmDeleteAccount() {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.12), shape: BoxShape.circle),
+                child: const Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 20),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  "Delete Account Permanently?",
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          content: const Text(
+            "Deleting your account will permanently wipe all profiles, prescriptions, eye drops, reminder schedules, and reports across your account. This action cannot be undone.",
+            style: TextStyle(fontSize: 13, height: 1.4, color: AppTheme.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                final dao = await DatabaseService.instance.userDao;
+                await dao.softDeleteAccount(widget.user.id);
+                if (!mounted) return;
+                widget.onLogout();
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
+              child: const Text("Permanently Delete Account", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -318,6 +366,18 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 label: Text("Delete '${widget.profile.name}' Profile Permanently", style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
                   side: BorderSide(color: AppTheme.error.withOpacity(0.4)),
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
+                ),
+              ),
+
+              // Delete Account Button
+              OutlinedButton.icon(
+                onPressed: _confirmDeleteAccount,
+                icon: const Icon(Icons.no_accounts_rounded, color: AppTheme.error),
+                label: const Text("Delete My Specz Account", style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.w700)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppTheme.error),
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
                 ),

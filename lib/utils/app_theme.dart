@@ -81,7 +81,7 @@ class AppTheme {
   // ─── SHADOWS ─────────────────────────────────────────────────────
   static List<BoxShadow> get softShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.06),
+          color: Colors.black.withValues(alpha: 0.06),
           blurRadius: 16,
           offset: const Offset(0, 4),
         ),
@@ -89,7 +89,7 @@ class AppTheme {
 
   static List<BoxShadow> get mediumShadow => [
         BoxShadow(
-          color: Colors.black.withOpacity(0.08),
+          color: Colors.black.withValues(alpha: 0.08),
           blurRadius: 24,
           offset: const Offset(0, 8),
         ),
@@ -97,7 +97,7 @@ class AppTheme {
 
   static List<BoxShadow> get primaryShadow => [
         BoxShadow(
-          color: primary.withOpacity(0.25),
+          color: primary.withValues(alpha: 0.25),
           blurRadius: 16,
           offset: const Offset(0, 6),
         ),
@@ -105,7 +105,7 @@ class AppTheme {
 
   static List<BoxShadow> get accentShadow => [
         BoxShadow(
-          color: accent.withOpacity(0.3),
+          color: accent.withValues(alpha: 0.3),
           blurRadius: 16,
           offset: const Offset(0, 6),
         ),
@@ -119,9 +119,9 @@ class AppTheme {
       );
 
   static BoxDecoration get glassDecoration => BoxDecoration(
-        color: Colors.white.withOpacity(0.85),
+        color: Colors.white.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(radiusLarge),
-        border: Border.all(color: Colors.white.withOpacity(0.4)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.4)),
         boxShadow: softShadow,
       );
 
@@ -156,7 +156,7 @@ class AppTheme {
       ),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusMedium),
-        borderSide: BorderSide(color: border.withOpacity(0.5)),
+        borderSide: BorderSide(color: border.withValues(alpha: 0.5)),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(radiusMedium),

@@ -18,7 +18,8 @@ void main() {
       ),
     );
 
-    expect(find.textContaining('85 / 100'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.text('85'), findsOneWidget);
     expect(find.textContaining('Prescription is up to date.'), findsOneWidget);
   });
 

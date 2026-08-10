@@ -153,11 +153,11 @@ class _EyeHealthScoreCardState extends State<EyeHealthScoreCard>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            "Eye Health Score",
+                            "Vision Care Score",
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 0.5,
                             ),
                           ),
