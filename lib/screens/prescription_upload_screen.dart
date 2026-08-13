@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
@@ -43,6 +44,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
   final _pdController = TextEditingController(text: "63.0");
   final _notesController = TextEditingController(text: "Anti-reflective coating recommended for computer use.");
 
+  File? _imageFile;
   bool isOcrProcessing = false;
   bool showWarning = false;
   int uploadQueueCount = 0;

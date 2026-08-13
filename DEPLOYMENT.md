@@ -30,9 +30,10 @@ This document provides a production-grade step-by-step deployment guide for the 
           ┌───────────────────────┼───────────────────────┐
           │                       │                       │
           ▼                       ▼                       ▼
-   PostgreSQL 15                Redis SQS            Private S3 Storage
+   PostgreSQL 15          Redis (Task Queue)       Private S3 Storage
  (Cloud Managed DB)          (Task Engine)        (Encrypted Medical Docs)
 ```
+
 
 ---
 
