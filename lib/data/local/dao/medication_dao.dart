@@ -1,7 +1,5 @@
 import 'package:sqflite/sqflite.dart';
 import '../../../models/medicine_model.dart';
-import '../../../models/medication_schedule_model.dart';
-import '../../../models/medication_log_model.dart';
 
 class MedicationDao {
   final Database db;

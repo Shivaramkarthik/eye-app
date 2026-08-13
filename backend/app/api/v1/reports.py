@@ -1,3 +1,4 @@
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import List, Dict, Any
@@ -71,5 +72,6 @@ async def get_presigned_upload_url(
     current_user: User = Depends(get_current_user)
 ) -> Dict[str, Any]:
     """Returns a pre-signed S3 upload URL for private medical document backup."""
-    object_name = f"users/{current_user.id}/reports/{uuid.uuid4().hex}_{filename}"
+    safe_filename = os.path.basename(filename)
+    object_name = f"users/{current_user.id}/reports/{uuid.uuid4().hex}_{safe_filename}"
     return StorageService.generate_presigned_upload_url(object_name)

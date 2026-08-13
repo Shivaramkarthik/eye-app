@@ -15,6 +15,9 @@ class PrescriptionModel {
   final double? pd;       // Pupillary Distance
   final String? notes;
   final String? imageUrl;
+  final String source;
+  final double ocrConfidence;
+  final bool confirmedByUser;
   final bool isCurrent;
   final String createdAt;
 
@@ -35,6 +38,9 @@ class PrescriptionModel {
     this.pd,
     this.notes,
     this.imageUrl,
+    this.source = 'MANUAL',
+    this.ocrConfidence = 1.0,
+    this.confirmedByUser = true,
     this.isCurrent = true,
     required this.createdAt,
   });
@@ -60,6 +66,9 @@ class PrescriptionModel {
       'pd': pd,
       'notes': notes,
       'imageUrl': imageUrl,
+      'source': source,
+      'ocrConfidence': ocrConfidence,
+      'confirmedByUser': confirmedByUser ? 1 : 0,
       'isCurrent': isCurrent ? 1 : 0,
       'createdAt': createdAt,
     };
@@ -83,6 +92,9 @@ class PrescriptionModel {
       pd: (map['pd'] as num?)?.toDouble(),
       notes: map['notes'],
       imageUrl: map['imageUrl'],
+      source: map['source'] ?? 'MANUAL',
+      ocrConfidence: (map['ocrConfidence'] as num?)?.toDouble() ?? 1.0,
+      confirmedByUser: (map['confirmedByUser'] == 1 || map['confirmedByUser'] == true),
       isCurrent: (map['isCurrent'] == 1 || map['isCurrent'] == true),
       createdAt: map['createdAt'] ?? DateTime.now().toIso8601String(),
     );

@@ -29,6 +29,8 @@ class ProfileModel {
     required this.createdAt,
   });
 
+  String get profileType => type;
+
   Map<String, dynamic> toMap() {
     return {
       'id': id,

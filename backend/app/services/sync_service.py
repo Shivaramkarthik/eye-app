@@ -171,9 +171,9 @@ class SyncService:
                         sph=p.get("rightSph"),
                         cyl=p.get("rightCyl"),
                         axis=p.get("rightAxis"),
-                        sph_status="CONFIRMED" if p.get("rightSph") is not null else "MISSING",
-                        cyl_status="CONFIRMED" if p.get("rightCyl") is not null else "MISSING",
-                        axis_status="CONFIRMED" if p.get("rightAxis") is not null else "MISSING",
+                        sph_status="CONFIRMED" if p.get("rightSph") is not None else "MISSING",
+                        cyl_status="CONFIRMED" if p.get("rightCyl") is not None else "MISSING",
+                        axis_status="CONFIRMED" if p.get("rightAxis") is not None else "MISSING",
                         created_at=datetime.now(timezone.utc)
                     )
                     db.add(ev_od)
@@ -187,9 +187,9 @@ class SyncService:
                         sph=p.get("leftSph"),
                         cyl=p.get("leftCyl"),
                         axis=p.get("leftAxis"),
-                        sph_status="CONFIRMED" if p.get("leftSph") is not null else "MISSING",
-                        cyl_status="CONFIRMED" if p.get("leftCyl") is not null else "MISSING",
-                        axis_status="CONFIRMED" if p.get("leftAxis") is not null else "MISSING",
+                        sph_status="CONFIRMED" if p.get("leftSph") is not None else "MISSING",
+                        cyl_status="CONFIRMED" if p.get("leftCyl") is not None else "MISSING",
+                        axis_status="CONFIRMED" if p.get("leftAxis") is not None else "MISSING",
                         created_at=datetime.now(timezone.utc)
                     )
                     db.add(ev_os)

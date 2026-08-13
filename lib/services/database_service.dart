@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:sqflite/sqflite.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
@@ -68,6 +67,11 @@ class DatabaseService {
   Future<UserModel?> getUser(String userId) async {
     final dao = await userDao;
     return dao.getUser(userId);
+  }
+
+  Future<UserModel?> getUserByEmail(String email) async {
+    final dao = await userDao;
+    return dao.getUserByEmail(email);
   }
 
   Future<void> saveUser(UserModel user) async {

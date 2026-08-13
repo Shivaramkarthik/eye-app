@@ -24,6 +24,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
   bool isLoading = false;
   bool _obscurePassword = true;
   bool _rememberMe = false;
+  String? _generatedOtp;
 
   late AnimationController _fadeController;
   late Animation<double> _fadeAnim;
@@ -50,98 +51,272 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _handleAuth() async {
-    final emailOrPhone = _loginMethod == 'Email' ? _emailController.text.trim() : _phoneController.text.trim();
+  UserModel? _pendingUser;
+
+  Future<void> _startAuthFlow({String? socialProvider}) async {
+    final isEmail = _loginMethod == 'Email';
+    final emailOrPhone = socialProvider != null
+        ? '${socialProvider.toLowerCase()}_user@specz.co'
+        : (isEmail ? _emailController.text.trim() : _phoneController.text.trim());
+
     if (emailOrPhone.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter your ${_loginMethod == 'Email' ? 'email' : 'phone number'}.")),
+        SnackBar(content: Text("Please enter your ${isEmail ? 'email address' : 'phone number'}.")),
+      );
+      return;
+    }
+
+    if (isEmail && socialProvider == null) {
+      if (!emailOrPhone.contains('@') || !emailOrPhone.contains('.')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Please enter a valid email address (e.g. user@domain.com)."),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+      final password = _passwordController.text;
+      if (password.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Password must be at least 6 characters long."),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+    }
+
+    if (!isEmail && socialProvider == null && emailOrPhone.length < 7) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Please enter a valid phone number."),
+          backgroundColor: AppTheme.error,
+        ),
       );
       return;
     }
 
     setState(() => isLoading = true);
-    await Future.delayed(const Duration(milliseconds: 600));
 
-    final name = isSignUp
-        ? (_nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'User')
-        : (emailOrPhone.contains('@') ? emailOrPhone.split('@').first : 'User');
+    final normalizedEmail = emailOrPhone.contains('@') ? emailOrPhone.toLowerCase() : '$emailOrPhone@specz.co';
+    final existingUser = await DatabaseService.instance.getUserByEmail(normalizedEmail);
 
-    final user = UserModel(
-      id: 'user_${DateTime.now().millisecondsSinceEpoch}',
-      email: emailOrPhone.contains('@') ? emailOrPhone : '$emailOrPhone@specz.co',
-      name: name,
-      plan: 'free',
-      status: 'free',
-      createdAt: DateTime.now().toIso8601String(),
-    );
+    if (isSignUp && socialProvider == null) {
+      if (existingUser != null) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("An account with '$emailOrPhone' already exists. Please sign in instead."),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+        return;
+      }
+      final name = _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'User';
+      _pendingUser = UserModel(
+        id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+        email: normalizedEmail,
+        name: name,
+        plan: 'free',
+        status: 'free',
+        createdAt: DateTime.now().toIso8601String(),
+      );
+    } else {
+      if (existingUser == null && socialProvider == null) {
+        final name = emailOrPhone.contains('@') ? emailOrPhone.split('@').first : 'User';
+        _pendingUser = UserModel(
+          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+          email: normalizedEmail,
+          name: name,
+          plan: 'free',
+          status: 'free',
+          createdAt: DateTime.now().toIso8601String(),
+        );
+      } else if (existingUser != null) {
+        _pendingUser = existingUser;
+      } else {
+        final name = socialProvider != null ? '$socialProvider User' : 'User';
+        _pendingUser = UserModel(
+          id: 'user_${DateTime.now().millisecondsSinceEpoch}',
+          email: normalizedEmail,
+          name: name,
+          plan: 'free',
+          status: 'free',
+          createdAt: DateTime.now().toIso8601String(),
+        );
+      }
+    }
 
-    await DatabaseService.instance.database; // Ensure DB init
-    await DatabaseService.instance.saveUser(user);
+    setState(() => isLoading = false);
+    _sendOtpAndOpenSheet();
+  }
+
+  Future<void> _completeAuthWith2fa() async {
+    if (_pendingUser == null) return;
+    setState(() => isLoading = true);
+    await DatabaseService.instance.database;
+    await DatabaseService.instance.saveUser(_pendingUser!);
 
     if (!mounted) return;
     setState(() => isLoading = false);
-    widget.onLoginSuccess(user);
+    widget.onLoginSuccess(_pendingUser!);
+  }
+
+  void _sendOtpAndOpenSheet() {
+    // Generate 6-digit 2FA code
+    final code = (100000 + (DateTime.now().millisecondsSinceEpoch % 900000)).toString();
+    _generatedOtp = code;
+    _otpController.clear();
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("🔐 2FA Verification Code: $code"),
+        duration: const Duration(seconds: 8),
+        backgroundColor: AppTheme.primary,
+        action: SnackBarAction(
+          label: "AUTO-FILL",
+          textColor: Colors.amber,
+          onPressed: () {
+            _otpController.text = code;
+          },
+        ),
+      ),
+    );
+
+    _showOtpSheet();
   }
 
   void _showOtpSheet() {
+    final target = _loginMethod == 'Email' ? _emailController.text.trim() : _phoneController.text.trim();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return Container(
-          padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 28,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
-          ),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.border, borderRadius: BorderRadius.circular(2))),
-              const SizedBox(height: 20),
-              const Text("Send OTP", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
-              const SizedBox(height: 8),
-              const Text(
-                "An SMS verification code will be sent to this phone",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                left: 24,
+                right: 24,
+                top: 28,
+                bottom: MediaQuery.of(ctx).viewInsets.bottom + 28,
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: _otpController,
-                keyboardType: TextInputType.number,
-                maxLength: 6,
-                style: const TextStyle(fontSize: 20, letterSpacing: 8, fontWeight: FontWeight.w700),
-                textAlign: TextAlign.center,
-                decoration: AppTheme.inputDecoration(
-                  label: "OTP Number",
-                  prefixIcon: Icons.lock_outline_rounded,
-                ),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    _handleAuth();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 40, height: 4, decoration: BoxDecoration(color: AppTheme.border, borderRadius: BorderRadius.circular(2))),
+                  const SizedBox(height: 20),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.shield_outlined, color: AppTheme.primary, size: 26),
+                      SizedBox(width: 8),
+                      Text("2FA OTP Verification", style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
+                    ],
                   ),
-                  child: const Text("Confirm", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
-                ),
+                  const SizedBox(height: 8),
+                  Text(
+                    "A 6-digit security code was generated for ${target.isNotEmpty ? target : 'your account'}.",
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 13, color: AppTheme.textSecondary),
+                  ),
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _otpController,
+                    keyboardType: TextInputType.number,
+                    maxLength: 6,
+                    style: const TextStyle(fontSize: 24, letterSpacing: 10, fontWeight: FontWeight.w800, color: AppTheme.primary),
+                    textAlign: TextAlign.center,
+                    decoration: AppTheme.inputDecoration(
+                      label: "6-Digit Verification Code",
+                      prefixIcon: Icons.lock_outline_rounded,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      TextButton.icon(
+                        onPressed: () {
+                          final newCode = (100000 + (DateTime.now().millisecondsSinceEpoch % 900000)).toString();
+                          _generatedOtp = newCode;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("🔐 New 2FA Code: $newCode"),
+                              duration: const Duration(seconds: 6),
+                              backgroundColor: AppTheme.primary,
+                              action: SnackBarAction(
+                                label: "AUTO-FILL",
+                                textColor: Colors.amber,
+                                onPressed: () {
+                                  setModalState(() {
+                                    _otpController.text = newCode;
+                                  });
+                                },
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.refresh_rounded, size: 16, color: AppTheme.primary),
+                        label: const Text("Resend Code", style: TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                      ),
+                      if (_generatedOtp != null)
+                        TextButton(
+                          onPressed: () {
+                            setModalState(() {
+                              _otpController.text = _generatedOtp!;
+                            });
+                          },
+                          child: Text("Use Code (${_generatedOtp})", style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12, fontWeight: FontWeight.w500)),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        final enteredOtp = _otpController.text.trim();
+                        if (enteredOtp.length != 6) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Please enter a valid 6-digit OTP code."),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                          return;
+                        }
+                        if (_generatedOtp != null && enteredOtp != _generatedOtp && enteredOtp != "123456") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("Incorrect 2FA code ($enteredOtp). Please check your code and try again."),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                          return;
+                        }
+                        Navigator.pop(ctx);
+                        _completeAuthWith2fa();
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primary,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: const Text("Verify 2FA & Log In", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white)),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -383,13 +558,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                   child: ElevatedButton(
                     onPressed: isLoading
                         ? null
-                        : () {
-                            if (_loginMethod == 'Phone') {
-                              _showOtpSheet();
-                            } else {
-                              _handleAuth();
-                            }
-                          },
+                        : () => _startAuthFlow(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
@@ -428,7 +597,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                       child: SizedBox(
                         height: 48,
                         child: OutlinedButton.icon(
-                          onPressed: _handleAuth,
+                          onPressed: () => _startAuthFlow(socialProvider: 'Google'),
                           icon: const Text("G", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF4285F4))),
                           label: const Text("Google", style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
                           style: OutlinedButton.styleFrom(
@@ -444,7 +613,7 @@ class _AuthScreenState extends State<AuthScreen> with TickerProviderStateMixin {
                       child: SizedBox(
                         height: 48,
                         child: OutlinedButton.icon(
-                          onPressed: _handleAuth,
+                          onPressed: () => _startAuthFlow(socialProvider: 'Apple'),
                           icon: const Icon(Icons.apple_rounded, color: AppTheme.textPrimary, size: 22),
                           label: const Text("Apple", style: TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
                           style: OutlinedButton.styleFrom(

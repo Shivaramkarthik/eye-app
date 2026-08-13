@@ -17,6 +17,18 @@ class UserDao {
     return null;
   }
 
+  Future<UserModel?> getUserByEmail(String email) async {
+    final res = await db.query('users', where: 'email = ? AND (deleted_at IS NULL)', whereArgs: [email.toLowerCase().trim()]);
+    if (res.isNotEmpty) {
+      final map = Map<String, dynamic>.from(res.first);
+      if (!map.containsKey('name') && map.containsKey('display_name')) {
+        map['name'] = map['display_name'];
+      }
+      return UserModel.fromMap(map);
+    }
+    return null;
+  }
+
   Future<void> insertUser(UserModel user) async {
     await db.insert('users', {
       'id': user.id,

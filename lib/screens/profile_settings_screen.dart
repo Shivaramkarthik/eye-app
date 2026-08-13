@@ -32,6 +32,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late String _gender;
   late String _relationship;
 
+  bool _is2faEnabled = true;
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _relationships = ['Self', 'Child', 'Spouse', 'Parent', 'Other'];
 
@@ -334,6 +335,27 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 child: Column(
                   children: [
                     _buildSettingsTile(
+                      icon: Icons.shield_outlined,
+                      title: "Two-Factor Authentication (2FA)",
+                      trailing: Switch(
+                        value: _is2faEnabled,
+                        activeColor: AppTheme.primary,
+                        onChanged: (val) {
+                          setState(() => _is2faEnabled = val);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(val ? "🔐 2FA Security Protection Enabled." : "⚠️ 2FA Disabled."),
+                              backgroundColor: val ? AppTheme.primary : AppTheme.error,
+                            ),
+                          );
+                        },
+                      ),
+                      onTap: () {
+                        setState(() => _is2faEnabled = !_is2faEnabled);
+                      },
+                    ),
+                    const Divider(height: 1, indent: 56),
+                    _buildSettingsTile(
                       icon: Icons.notifications_active_rounded,
                       title: "Alerts & Notification Preferences",
                       onTap: () {},
@@ -404,6 +426,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   Widget _buildSettingsTile({
     required IconData icon,
     required String title,
+    Widget? trailing,
     required VoidCallback onTap,
   }) {
     return Material(
@@ -418,7 +441,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
           child: Icon(icon, color: AppTheme.primary, size: 20),
         ),
         title: Text(title, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppTheme.textPrimary)),
-        trailing: const Icon(Icons.chevron_right_rounded, color: AppTheme.textHint, size: 20),
+        trailing: trailing ?? const Icon(Icons.chevron_right_rounded, color: AppTheme.textHint, size: 20),
         onTap: onTap,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusLarge)),
       ),
