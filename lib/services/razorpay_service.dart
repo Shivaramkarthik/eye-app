@@ -1,5 +1,6 @@
 import 'dart:async';
 import '../models/user_model.dart';
+import '../data/remote/api_client.dart';
 import 'database_service.dart';
 
 class RazorpayService {
@@ -7,8 +8,8 @@ class RazorpayService {
   RazorpayService._internal();
 
   /// Enforces server-backed Razorpay payment flow.
-  /// Note: In production, order creation occurs on backend server (POST /subscription/order)
-  /// and signature verification occurs via backend webhook (POST /subscription/webhook).
+  /// Order creation occurs on backend server (POST /subscriptions/order)
+  /// and signature verification occurs via backend API (POST /subscriptions/verify).
   Future<bool> processSubscriptionPayment({
     required UserModel user,
     required String planId,
@@ -16,23 +17,38 @@ class RazorpayService {
     String? backendPaymentId,
     String? backendSignature,
   }) async {
-    // Standard validation: Require valid user ID and plan identifier
     if (user.id.isEmpty) return false;
 
-    // Simulate backend verification response when testing in local sandbox mode
-    final subId = backendSubscriptionId ?? "sub_rzp_${DateTime.now().millisecondsSinceEpoch}";
-    final renewalDate = DateTime.now().add(const Duration(days: 30)).toIso8601String();
+    try {
+      final response = await ApiClient.instance.post(
+        '/subscriptions/verify',
+        data: {
+          'user_id': user.id,
+          'plan_id': planId,
+          'razorpay_order_id': backendOrderId,
+          'razorpay_payment_id': backendPaymentId,
+          'razorpay_signature': backendSignature,
+        },
+      );
 
-    // Persist verified subscription entitlement into local database cache
-    await DatabaseService.instance.updateUserPlan(
-      user.id,
-      'plus',
-      'active',
-      subId,
-      renewalDate,
-    );
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final subId = response.data['subscription_id'] ?? "sub_rzp_${DateTime.now().millisecondsSinceEpoch}";
+        final renewalDate = response.data['expires_at'] ?? DateTime.now().add(const Duration(days: 30)).toIso8601String();
 
-    return true;
+        await DatabaseService.instance.updateUserPlan(
+          user.id,
+          'plus',
+          'active',
+          subId,
+          renewalDate,
+        );
+        return true;
+      }
+    } catch (_) {
+      return false;
+    }
+
+    return false;
   }
 
   String? get backendSubscriptionId => null;

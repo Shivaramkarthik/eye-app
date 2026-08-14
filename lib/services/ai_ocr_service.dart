@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:math';
+import '../data/remote/api_client.dart';
 import '../models/prescription_model.dart';
 import '../models/profile_model.dart';
 import '../models/medicine_model.dart';
@@ -62,39 +62,38 @@ class AiOcrService {
   static final AiOcrService instance = AiOcrService._internal();
   AiOcrService._internal();
 
-  /// OCR extraction pipeline with confidence scoring
+  /// Real OCR extraction pipeline with backend Vision gateway & confidence scoring
   Future<AiOcrResult> extractPrescriptionData(String imagePathOrBytes) async {
-    await Future.delayed(const Duration(milliseconds: 650));
+    try {
+      final response = await ApiClient.instance.post(
+        '/ai/ocr',
+        data: {'image_path': imagePathOrBytes},
+      );
 
-    final random = Random();
-    double rightSph = -1.50 - (random.nextInt(6) * 0.25);
-    double rightCyl = -0.50 - (random.nextInt(4) * 0.25);
-    int rightAxis = 90 + random.nextInt(90);
-
-    double leftSph = -1.75 - (random.nextInt(6) * 0.25);
-    double? leftCyl = random.nextBool() ? -0.50 - (random.nextInt(3) * 0.25) : null;
-    int? leftAxis = leftCyl != null ? 85 + random.nextInt(90) : null;
-
-    return AiOcrResult(
-      rightSph: double.parse(rightSph.toStringAsFixed(2)),
-      rightCyl: double.parse(rightCyl.toStringAsFixed(2)),
-      rightAxis: rightAxis,
-      leftSph: double.parse(leftSph.toStringAsFixed(2)),
-      leftCyl: leftCyl != null ? double.parse(leftCyl.toStringAsFixed(2)) : null,
-      leftAxis: leftAxis,
-      addPower: 0.0,
-      pd: 63.0,
-      doctorName: 'Dr. R. K. Mehta',
-      clinicName: 'ClearVision Eye Specialty Clinic',
-      notes: 'Extracted via Gemini Vision OCR model. Please double-check missing CYL values.',
-      rawOcrText: 'OD: SPH $rightSph CYL $rightCyl AXIS $rightAxis\nOS: SPH $leftSph CYL ${leftCyl ?? "Missing"}\nPD: 63mm',
-      rightSphConfidence: 0.98,
-      rightCylConfidence: 0.95,
-      rightAxisConfidence: 0.91,
-      leftSphConfidence: 0.97,
-      leftCylConfidence: leftCyl != null ? 0.92 : 0.40,
-      leftAxisConfidence: leftAxis != null ? 0.90 : 0.40,
-    );
+      final data = response.data as Map<String, dynamic>;
+      return AiOcrResult(
+        rightSph: data['right_sph'] != null ? (data['right_sph'] as num).toDouble() : null,
+        rightCyl: data['right_cyl'] != null ? (data['right_cyl'] as num).toDouble() : null,
+        rightAxis: data['right_axis'] != null ? (data['right_axis'] as num).toInt() : null,
+        leftSph: data['left_sph'] != null ? (data['left_sph'] as num).toDouble() : null,
+        leftCyl: data['left_cyl'] != null ? (data['left_cyl'] as num).toDouble() : null,
+        leftAxis: data['left_axis'] != null ? (data['left_axis'] as num).toInt() : null,
+        addPower: data['add_power'] != null ? (data['add_power'] as num).toDouble() : 0.0,
+        pd: data['pd'] != null ? (data['pd'] as num).toDouble() : 63.0,
+        doctorName: data['doctor_name'] ?? '',
+        clinicName: data['clinic_name'] ?? '',
+        notes: data['notes'] ?? 'Extracted via OCR model.',
+        rawOcrText: data['raw_ocr_text'] ?? '',
+        rightSphConfidence: (data['right_sph_confidence'] ?? 0.95 as num).toDouble(),
+        rightCylConfidence: (data['right_cyl_confidence'] ?? 0.90 as num).toDouble(),
+        rightAxisConfidence: (data['right_axis_confidence'] ?? 0.90 as num).toDouble(),
+        leftSphConfidence: (data['left_sph_confidence'] ?? 0.95 as num).toDouble(),
+        leftCylConfidence: (data['left_cyl_confidence'] ?? 0.90 as num).toDouble(),
+        leftAxisConfidence: (data['left_axis_confidence'] ?? 0.90 as num).toDouble(),
+      );
+    } catch (e) {
+      throw Exception('OCR Vision extraction failed: Unable to process document via Vision gateway ($e). Please re-take photo or enter values manually.');
+    }
   }
 
   /// Calculates component-based Vision Care Score (0-100)

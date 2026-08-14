@@ -16,6 +16,7 @@ from app.api.v1.subscriptions import router as subscriptions_router
 from app.api.v1.webhooks import router as webhooks_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.analytics import router as analytics_router
+from app.api.v1.websocket import router as websocket_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -61,6 +62,7 @@ app.include_router(subscriptions_router, prefix=f"{settings.API_V1_STR}/subscrip
 app.include_router(webhooks_router, prefix=f"{settings.API_V1_STR}/webhooks", tags=["Webhooks"])
 app.include_router(ai_router, prefix=f"{settings.API_V1_STR}/ai", tags=["AI & OCR"])
 app.include_router(analytics_router, prefix=f"{settings.API_V1_STR}/analytics", tags=["Analytics"])
+app.include_router(websocket_router, prefix=f"{settings.API_V1_STR}", tags=["Realtime WebSocket"])
 
 @app.get("/")
 async def root():
