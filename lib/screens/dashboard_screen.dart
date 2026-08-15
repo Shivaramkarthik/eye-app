@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
 import '../models/user_model.dart';
 import '../models/profile_model.dart';
@@ -27,10 +26,10 @@ class DashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
 
   const DashboardScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.onLogout,
-  }) : super(key: key);
+  });
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -286,7 +285,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withOpacity(0.1),
+                        color: AppTheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -401,7 +400,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withOpacity(0.08),
+                    color: AppTheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -456,7 +455,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: color.withOpacity(0.15), shape: BoxShape.circle),
+            decoration: BoxDecoration(color: color.withValues(alpha: 0.15), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 18),
           ),
           const SizedBox(width: 12),
@@ -491,7 +490,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withValues(alpha: 0.06),
               blurRadius: 20,
               offset: const Offset(0, -4),
             ),
@@ -612,13 +611,13 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                                 Container(
                                   padding: const EdgeInsets.all(24),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.primary.withOpacity(0.08),
+                                    color: AppTheme.primary.withValues(alpha: 0.08),
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
                                     Icons.person_add_rounded,
                                     size: 48,
-                                    color: AppTheme.primary.withOpacity(0.5),
+                                    color: AppTheme.primary.withValues(alpha: 0.5),
                                   ),
                                 ),
                                 const SizedBox(height: 16),
@@ -685,7 +684,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
         duration: AppTheme.animFast,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.primary.withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? AppTheme.primary.withValues(alpha: 0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -960,7 +959,7 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: const Icon(Icons.remove_red_eye_rounded, size: 18, color: AppTheme.primary),
@@ -1059,9 +1058,9 @@ class _DashboardScreenState extends State<DashboardScreen> with SingleTickerProv
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.06),
+        color: accentColor.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accentColor.withOpacity(0.15)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

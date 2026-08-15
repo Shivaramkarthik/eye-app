@@ -15,14 +15,18 @@ from app.schemas.ai import (
     AISummaryRequest,
     AISummaryResponse,
 )
+from app.core.rate_limiter import limiter
 from app.services.ocr_service import OCRService
 from app.services.ai_service import AIService
+from starlette.requests import Request
 
 router = APIRouter()
 
 @router.post("/ocr-prescription", response_model=OCRResponse)
+@limiter.limit("10/minute")
 async def extract_ocr_prescription(
     req: OCRRequest,
+    request: Request,
     current_user: User = Depends(get_current_user)
 ):
     """Extracts optical prescription parameters from image. (User confirmation in Flutter is mandatory)."""

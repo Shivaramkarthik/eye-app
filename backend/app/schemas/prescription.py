@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class EyeValueSchema(BaseModel):
     eye: str  # 'OD' or 'OS'
@@ -10,6 +11,9 @@ class EyeValueSchema(BaseModel):
     sph_status: str = "CONFIRMED"
     cyl_status: str = "CONFIRMED"
     axis_status: str = "CONFIRMED"
+
+    model_config = ConfigDict(from_attributes=True)
+
 
 class PrescriptionCreate(BaseModel):
     prescription_date: str
@@ -24,6 +28,7 @@ class PrescriptionCreate(BaseModel):
     confirmed_by_user: int = 1
     is_current: int = 1
     eye_values: List[EyeValueSchema] = []
+
 
 class PrescriptionOut(BaseModel):
     id: str
@@ -44,5 +49,4 @@ class PrescriptionOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

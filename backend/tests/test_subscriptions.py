@@ -1,9 +1,13 @@
 import pytest
 from httpx import AsyncClient
+from conftest import make_google_payload
 
 @pytest.mark.asyncio
-async def test_subscription_and_entitlements(client: AsyncClient):
-    reg = await client.post("/api/v1/auth/register", json={"email": "sub_user@specz.co", "password": "Password123!"})
+async def test_subscription_and_entitlements(client: AsyncClient, mock_google_verify):
+    mock_google_verify.return_value = make_google_payload(
+        sub="sub_user_sub", email="sub_user@specz.co", name="Sub User"
+    )
+    reg = await client.post("/api/v1/auth/google", json={"google_id_token": "token"})
     token = reg.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

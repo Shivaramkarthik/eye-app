@@ -7,10 +7,10 @@ class PrescriptionConfirmationDialog extends StatefulWidget {
   final Function(Map<String, dynamic> confirmedData) onConfirmed;
 
   const PrescriptionConfirmationDialog({
-    Key? key,
+    super.key,
     required this.ocrResult,
     required this.onConfirmed,
-  }) : super(key: key);
+  });
 
   @override
   State<PrescriptionConfirmationDialog> createState() => _PrescriptionConfirmationDialogState();
@@ -179,10 +179,18 @@ class _PrescriptionConfirmationDialogState extends State<PrescriptionConfirmatio
                 color: Colors.amber.shade50,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.amber.shade300),
-              ),
-              child: const Text(
-                "AI/OCR can make mistakes. Please double-check all prescription values against the original prescription before saving. Specz.co is not a substitute for professional medical advice.",
-                style: TextStyle(fontSize: 11, color: Colors.amber, fontWeight: FontWeight.w500),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(LucideIcons.alertTriangle, size: 16, color: Color(0xFFD97706)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "AI/OCR can make mistakes. Please double-check all prescription values against the original prescription before saving. Specz.co is not a substitute for professional medical advice.",
+                      style: TextStyle(fontSize: 11, color: Color(0xFF92400E), fontWeight: FontWeight.w600, height: 1.3),
+                    ),
+                  ),
+                ],
               ),
             ),
             const SizedBox(height: 20),

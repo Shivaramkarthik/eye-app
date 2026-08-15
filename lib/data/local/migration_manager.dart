@@ -10,10 +10,11 @@ class DatabaseMigrationManager {
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         email TEXT NOT NULL,
-        phone TEXT,
+        google_sub TEXT,
         first_name TEXT,
         last_name TEXT,
         display_name TEXT,
+        avatar_url TEXT,
         plan TEXT NOT NULL DEFAULT 'free',
         account_status TEXT NOT NULL DEFAULT 'ACTIVE',
         created_at TEXT NOT NULL,

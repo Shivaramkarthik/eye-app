@@ -4,7 +4,7 @@ import '../utils/app_icons.dart';
 
 
 class MissingSphWarningBanner extends StatelessWidget {
-  const MissingSphWarningBanner({Key? key}) : super(key: key);
+  const MissingSphWarningBanner({super.key});
 
   @override
   Widget build(BuildContext context) {

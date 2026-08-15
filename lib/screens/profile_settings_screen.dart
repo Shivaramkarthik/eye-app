@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
+import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../widgets/medical_disclaimer_banner.dart';
 
@@ -14,13 +14,13 @@ class ProfileSettingsScreen extends StatefulWidget {
   final VoidCallback onLogout;
 
   const ProfileSettingsScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.profile,
     required this.onProfileDeleted,
     this.onProfileUpdated,
     required this.onLogout,
-  }) : super(key: key);
+  });
 
   @override
   State<ProfileSettingsScreen> createState() => _ProfileSettingsScreenState();
@@ -32,7 +32,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late String _gender;
   late String _relationship;
 
-  bool _is2faEnabled = true;
   final List<String> _genders = ['Male', 'Female', 'Other'];
   final List<String> _relationships = ['Self', 'Child', 'Spouse', 'Parent', 'Other'];
 
@@ -94,7 +93,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: AppTheme.error.withOpacity(0.12), shape: BoxShape.circle),
+                decoration: BoxDecoration(color: AppTheme.error.withValues(alpha: 0.12), shape: BoxShape.circle),
                 child: const Icon(Icons.warning_amber_rounded, color: AppTheme.error, size: 20),
               ),
               const SizedBox(width: 10),
@@ -118,7 +117,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.pop(ctx);
-                await DatabaseService.instance.deleteProfileCascade(widget.profile.id);
+                await DatabaseService.instance.deleteProfileCascade(widget.profile.id, userId: widget.user.id);
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Profile '${widget.profile.name}' deleted.")),
@@ -170,6 +169,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 Navigator.pop(ctx);
                 final dao = await DatabaseService.instance.userDao;
                 await dao.softDeleteAccount(widget.user.id);
+                try {
+                  await AuthService.instance.logout();
+                } catch (_) {}
                 if (!mounted) return;
                 widget.onLogout();
               },
@@ -211,7 +213,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       children: [
                         CircleAvatar(
                           radius: 26,
-                          backgroundColor: Colors.white.withOpacity(0.2),
+                          backgroundColor: Colors.white.withValues(alpha: 0.2),
                           child: const Icon(Icons.person_rounded, color: Colors.white, size: 30),
                         ),
                         const SizedBox(width: 14),
@@ -225,7 +227,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                               ),
                               Text(
                                 widget.user.email,
-                                style: TextStyle(fontSize: 13, color: Colors.white.withOpacity(0.85)),
+                                style: TextStyle(fontSize: 13, color: Colors.white.withValues(alpha: 0.85)),
                               ),
                             ],
                           ),
@@ -236,7 +238,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
@@ -293,14 +295,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                     ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
-                      value: _gender,
+                      initialValue: _gender,
                       decoration: AppTheme.inputDecoration(label: "Gender", prefixIcon: Icons.person_outline_rounded),
                       items: _genders.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
                       onChanged: (val) => setState(() => _gender = val!),
                     ),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
-                      value: _relationship,
+                      initialValue: _relationship,
                       decoration: AppTheme.inputDecoration(label: "Relationship", prefixIcon: Icons.family_restroom_rounded),
                       items: _relationships.map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
                       onChanged: (val) => setState(() => _relationship = val!),
@@ -335,27 +337,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 child: Column(
                   children: [
                     _buildSettingsTile(
-                      icon: Icons.shield_outlined,
-                      title: "Two-Factor Authentication (2FA)",
-                      trailing: Switch(
-                        value: _is2faEnabled,
-                        activeColor: AppTheme.primary,
-                        onChanged: (val) {
-                          setState(() => _is2faEnabled = val);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(val ? "🔐 2FA Security Protection Enabled." : "⚠️ 2FA Disabled."),
-                              backgroundColor: val ? AppTheme.primary : AppTheme.error,
-                            ),
-                          );
-                        },
-                      ),
-                      onTap: () {
-                        setState(() => _is2faEnabled = !_is2faEnabled);
-                      },
-                    ),
-                    const Divider(height: 1, indent: 56),
-                    _buildSettingsTile(
                       icon: Icons.notifications_active_rounded,
                       title: "Alerts & Notification Preferences",
                       onTap: () {},
@@ -387,7 +368,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.error),
                 label: Text("Delete '${widget.profile.name}' Profile Permanently", style: const TextStyle(color: AppTheme.error, fontWeight: FontWeight.w700)),
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: AppTheme.error.withOpacity(0.4)),
+                  side: BorderSide(color: AppTheme.error.withValues(alpha: 0.4)),
                   minimumSize: const Size(double.infinity, 50),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
                 ),
@@ -435,7 +416,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
         leading: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppTheme.primary.withOpacity(0.08),
+            color: AppTheme.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: AppTheme.primary, size: 20),

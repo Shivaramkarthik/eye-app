@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'utils/app_theme.dart';
 import 'models/user_model.dart';
 import 'screens/auth_screen.dart';
 import 'screens/dashboard_screen.dart';
 import 'services/database_service.dart';
+import 'services/notification_service.dart';
+import 'services/notification_scheduler.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,17 +17,18 @@ void main() async {
     systemNavigationBarColor: Colors.white,
   ));
 
-  // Instant Parallel Initialization
+  // Initialize notification service and permissions
+  try {
+    await NotificationService.instance.initialize();
+  } catch (_) {}
+
+  // Restore last local session from SQLite
   UserModel? savedUser;
   try {
-    final results = await Future.wait([
-      SharedPreferences.getInstance(),
-      DatabaseService.instance.database,
-    ]);
-    final prefs = results[0] as SharedPreferences;
-    final savedUserId = prefs.getString('active_user_id');
-    if (savedUserId != null) {
-      savedUser = await DatabaseService.instance.getUser(savedUserId);
+    await DatabaseService.instance.database;
+    savedUser = await DatabaseService.instance.getLastUser();
+    if (savedUser != null) {
+      await NotificationScheduler.instance.rescheduleAllActiveMedicinesForUser(savedUser.id);
     }
   } catch (_) {}
 
@@ -36,7 +38,7 @@ void main() async {
 class SpeczApp extends StatefulWidget {
   final UserModel? initialUser;
 
-  const SpeczApp({Key? key, this.initialUser}) : super(key: key);
+  const SpeczApp({super.key, this.initialUser});
 
   @override
   State<SpeczApp> createState() => _SpeczAppState();
@@ -51,11 +53,7 @@ class _SpeczAppState extends State<SpeczApp> {
     currentUser = widget.initialUser;
   }
 
-  void _handleLogout() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.remove('active_user_id');
-    } catch (_) {}
+  void _handleLogout() {
     setState(() => currentUser = null);
   }
 
@@ -141,19 +139,15 @@ class _SpeczAppState extends State<SpeczApp> {
           backgroundColor: AppTheme.textPrimary,
         ),
       ),
-      home: currentUser == null
-          ? AuthScreen(
-              onLoginSuccess: (user) async {
-                try {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('active_user_id', user.id);
-                } catch (_) {}
-                setState(() => currentUser = user);
-              },
-            )
-          : DashboardScreen(
+      home: currentUser != null
+          ? DashboardScreen(
               user: currentUser!,
               onLogout: _handleLogout,
+            )
+          : AuthScreen(
+              onLoginSuccess: (user) {
+                setState(() => currentUser = user);
+              },
             ),
     );
   }

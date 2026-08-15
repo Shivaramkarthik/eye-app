@@ -187,8 +187,8 @@ void main() {
       final userDao = UserDao(db);
       final profileDao = ProfileDao(db);
 
-      await userDao.insertUser(UserModel(id: 'user_A', email: 'a@test.com', name: 'User A', createdAt: '2026-08-10'));
-      await userDao.insertUser(UserModel(id: 'user_B', email: 'b@test.com', name: 'User B', createdAt: '2026-08-10'));
+      await userDao.insertUser(UserModel(id: 'user_A', email: 'a@test.com', name: 'User A', googleSub: 'google_a', avatarUrl: 'https://avatar.a', createdAt: '2026-08-10'));
+      await userDao.insertUser(UserModel(id: 'user_B', email: 'b@test.com', name: 'User B', googleSub: 'google_b', avatarUrl: 'https://avatar.b', createdAt: '2026-08-10'));
 
       await profileDao.insertProfile(ProfileModel(id: 'prof_B', userId: 'user_B', name: 'User B Profile', dob: '1990-01-01', gender: 'Female', type: 'Adult', relationship: 'Self', createdAt: '2026-08-10'));
 
@@ -261,6 +261,8 @@ void main() {
         id: 'u_exp',
         email: 'exp@test.com',
         name: 'Expired User',
+        googleSub: 'google_exp',
+        avatarUrl: 'https://avatar.exp',
         plan: 'plus',
         status: 'expired',
         createdAt: '2026-08-10',
@@ -276,6 +278,8 @@ void main() {
         id: 'u_free',
         email: 'free@test.com',
         name: 'Free User',
+        googleSub: 'google_free',
+        avatarUrl: 'https://avatar.free',
         plan: 'free',
         status: 'active',
         createdAt: '2026-08-10',
@@ -289,6 +293,8 @@ void main() {
         id: 'u_plus',
         email: 'plus@test.com',
         name: 'Plus User',
+        googleSub: 'google_plus',
+        avatarUrl: 'https://avatar.plus',
         plan: 'plus',
         status: 'active',
         createdAt: '2026-08-10',
@@ -336,7 +342,7 @@ void main() {
     // 17. Account deletion cascade
     test('Test 17: Account deletion soft deletes user record and marks status DELETED', () async {
       final userDao = UserDao(db);
-      await userDao.insertUser(UserModel(id: 'u_del', email: 'del@test.com', name: 'Del User', createdAt: '2026-08-10'));
+      await userDao.insertUser(UserModel(id: 'u_del', email: 'del@test.com', name: 'Del User', googleSub: 'google_del', avatarUrl: 'https://avatar.del', createdAt: '2026-08-10'));
 
       await userDao.softDeleteAccount('u_del');
       final fetched = await userDao.getUser('u_del');

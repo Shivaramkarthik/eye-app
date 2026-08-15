@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class EyeCareScoreOut(BaseModel):
     id: str
@@ -17,8 +18,8 @@ class EyeCareScoreOut(BaseModel):
     algorithm_version: int = 2
     calculated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class AISummaryOut(BaseModel):
     id: str
@@ -29,8 +30,8 @@ class AISummaryOut(BaseModel):
     prompt_version: str = "v2.0"
     generated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
 
 class DoctorQuestionOut(BaseModel):
     id: str
@@ -39,5 +40,4 @@ class DoctorQuestionOut(BaseModel):
     category: str = "General"
     generated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

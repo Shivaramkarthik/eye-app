@@ -43,7 +43,7 @@ class WebSocketService {
     _updateState(WebSocketConnectionState.reconnecting);
 
     try {
-      final token = await ApiClient.instance.secureStorage.read(key: 'jwt_access_token') ?? '';
+      final token = await ApiClient.instance.secureStorage.read(key: 'specz_access_token') ?? '';
       final wsUrl = BackendConfig.baseUrl
           .replaceAll('http://', 'ws://')
           .replaceAll('https://', 'wss://')

@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    # Google OAuth
+    GOOGLE_CLIENT_ID: str = "27928063402-hob0r74jfqp29jg6ljp1o1dj1d73n5db.apps.googleusercontent.com"
+
     # Razorpay
     RAZORPAY_KEY_ID: str = "rzp_test_placeholder"
     RAZORPAY_KEY_SECRET: str = "placeholder_secret"

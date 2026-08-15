@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
 import '../models/medicine_model.dart';
 import '../models/profile_model.dart';
@@ -8,6 +7,7 @@ import '../models/user_model.dart';
 import '../services/audio_haptic_service.dart';
 import '../services/database_service.dart';
 import '../services/notification_scheduler.dart';
+import '../services/notification_service.dart';
 
 class MedicineTrackerScreen extends StatefulWidget {
   final UserModel user;
@@ -15,11 +15,11 @@ class MedicineTrackerScreen extends StatefulWidget {
   final VoidCallback onUpdated;
 
   const MedicineTrackerScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.profile,
     required this.onUpdated,
-  }) : super(key: key);
+  });
 
   @override
   State<MedicineTrackerScreen> createState() => _MedicineTrackerScreenState();
@@ -49,56 +49,6 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
     super.dispose();
   }
 
-  void _showAlarmAlertDialog(MedicineModel med, String timeKey) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: const BoxDecoration(color: AppTheme.primary, shape: BoxShape.circle),
-                child: const Icon(Icons.alarm_on_rounded, color: Colors.white, size: 24),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text("Eye Drop Alarm!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-              ),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text("It's time for your scheduled eye drop:", style: TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-              const SizedBox(height: 8),
-              Text(med.name, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppTheme.primary)),
-              const SizedBox(height: 4),
-              Text("Dosage: ${med.dosage} (${med.type})", style: const TextStyle(fontSize: 13, color: AppTheme.textPrimary)),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text("Snooze"),
-            ),
-            ElevatedButton.icon(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _toggleLog(med, timeKey);
-              },
-              icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
-              label: const Text("Take Now", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.success),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   Future<void> _loadMedicines() async {
     final list = await DatabaseService.instance.getMedicines(widget.profile.id);
@@ -140,9 +90,13 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
 
     await DatabaseService.instance.insertMedicine(med);
     await NotificationScheduler.instance.scheduleMedicine(med);
+    try {
+      await NotificationService.instance.showImmediateTestNotification(med);
+    } catch (_) {}
     _nameController.clear();
     if (!mounted) return;
-    Navigator.pop(context); // close modal
+    final nav = Navigator.of(context);
+    nav.pop(); // close modal
     _loadMedicines();
     widget.onUpdated();
   }
@@ -231,7 +185,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                         children: [
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: selectedType,
+                              initialValue: selectedType,
                               decoration: AppTheme.inputDecoration(label: "Type"),
                               items: ['Drop', 'Tablet', 'Ointment', 'Custom']
                                   .map((t) => DropdownMenuItem(value: t, child: Text(t)))
@@ -260,7 +214,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                         runSpacing: 8,
                         children: [
                           ...selectedTimes.map((t) => Chip(
-                                backgroundColor: AppTheme.primary.withOpacity(0.1),
+                                backgroundColor: AppTheme.primary.withValues(alpha: 0.1),
                                 side: BorderSide.none,
                                 avatar: const Icon(Icons.alarm_rounded, size: 16, color: AppTheme.primary),
                                 label: Text(t, style: const TextStyle(fontWeight: FontWeight.w700, color: AppTheme.primary, fontSize: 13)),
@@ -294,7 +248,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                       const SizedBox(height: 16),
 
                       DropdownButtonFormField<String>(
-                        value: selectedTone,
+                        initialValue: selectedTone,
                         decoration: AppTheme.inputDecoration(
                           label: "Notification Sound",
                           prefixIcon: Icons.volume_up_rounded,
@@ -315,7 +269,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                           subtitle: const Text("Vibrate on reminder alert", style: TextStyle(fontSize: 12)),
                           secondary: Icon(Icons.vibration_rounded, color: vibrationEnabled ? AppTheme.primary : AppTheme.textHint),
                           value: vibrationEnabled,
-                          activeColor: AppTheme.primary,
+                          activeThumbColor: AppTheme.primary,
                           onChanged: (val) => setModalState(() => vibrationEnabled = val),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMedium)),
                         ),
@@ -367,11 +321,12 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
             tooltip: "Test Alarm Chime Sound",
             icon: const Icon(Icons.volume_up_rounded, color: AppTheme.primary),
             onPressed: () async {
+              final messenger = ScaffoldMessenger.of(context);
               await AudioHapticService.instance.playNotificationTone("Soft Chime");
               await AudioHapticService.instance.triggerVibration();
               if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("🔊 Alarm Sound & Vibration Tested!")),
+              messenger.showSnackBar(
+                const SnackBar(content: Text("Alarm Sound & Vibration Tested!")),
               );
             },
           ),
@@ -399,7 +354,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                         Container(
                           padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
-                            color: AppTheme.primary.withOpacity(0.1),
+                            color: AppTheme.primary.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(Icons.water_drop_rounded, size: 56, color: AppTheme.primary),
@@ -446,7 +401,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                               Container(
                                 padding: const EdgeInsets.all(10),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.primary.withOpacity(0.1),
+                                  color: AppTheme.primary.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Icon(Icons.water_drop_rounded, color: AppTheme.primary, size: 22),
@@ -496,7 +451,7 @@ class _MedicineTrackerScreenState extends State<MedicineTrackerScreen> {
                                   duration: const Duration(milliseconds: 200),
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                                   decoration: BoxDecoration(
-                                    color: isTaken ? AppTheme.success.withOpacity(0.15) : AppTheme.surface,
+                                    color: isTaken ? AppTheme.success.withValues(alpha: 0.15) : AppTheme.surface,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
                                       color: isTaken ? AppTheme.success : AppTheme.border,

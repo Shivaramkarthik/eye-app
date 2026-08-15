@@ -1,12 +1,16 @@
 import pytest
 from httpx import AsyncClient
+from conftest import make_google_payload
 
 @pytest.mark.asyncio
-async def test_profile_creation_and_limit(client: AsyncClient):
-    # Register Free Tier User
+async def test_profile_creation_and_limit(client: AsyncClient, mock_google_verify):
+    # Register Free Tier User via Google Sign-In
+    mock_google_verify.return_value = make_google_payload(
+        sub="free_user_sub", email="freeuser@specz.co", name="Free User"
+    )
     reg_res = await client.post(
-        "/api/v1/auth/register",
-        json={"email": "freeuser@specz.co", "password": "SecurePassword123!", "name": "Free User"}
+        "/api/v1/auth/google",
+        json={"google_id_token": "token"}
     )
     token = reg_res.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -30,14 +34,20 @@ async def test_profile_creation_and_limit(client: AsyncClient):
     assert "Profile limit reached" in p2_res.json()["detail"]
 
 @pytest.mark.asyncio
-async def test_profile_idor_protection(client: AsyncClient):
+async def test_profile_idor_protection(client: AsyncClient, mock_google_verify):
     # Register User A
-    user_a = await client.post("/api/v1/auth/register", json={"email": "user_a@specz.co", "password": "Password123!"})
+    mock_google_verify.return_value = make_google_payload(
+        sub="user_a_sub", email="user_a@specz.co", name="User A"
+    )
+    user_a = await client.post("/api/v1/auth/google", json={"google_id_token": "token_a"})
     token_a = user_a.json()["access_token"]
     headers_a = {"Authorization": f"Bearer {token_a}"}
 
     # Register User B
-    user_b = await client.post("/api/v1/auth/register", json={"email": "user_b@specz.co", "password": "Password123!"})
+    mock_google_verify.return_value = make_google_payload(
+        sub="user_b_sub", email="user_b@specz.co", name="User B"
+    )
+    user_b = await client.post("/api/v1/auth/google", json={"google_id_token": "token_b"})
     token_b = user_b.json()["access_token"]
     headers_b = {"Authorization": f"Bearer {token_b}"}
 

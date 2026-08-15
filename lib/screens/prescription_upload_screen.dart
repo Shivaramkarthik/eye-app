@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
+import 'package:image_picker/image_picker.dart';
 import '../utils/app_theme.dart';
 import '../models/prescription_model.dart';
 import '../models/profile_model.dart';
@@ -17,37 +17,67 @@ class PrescriptionUploadScreen extends StatefulWidget {
   final VoidCallback onSaved;
 
   const PrescriptionUploadScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.profile,
     required this.onSaved,
-  }) : super(key: key);
+  });
 
   @override
   State<PrescriptionUploadScreen> createState() => _PrescriptionUploadScreenState();
 }
 
 class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
-  final _doctorController = TextEditingController(text: "Dr. Ananya Sharma");
-  final _clinicController = TextEditingController(text: "ClearVision Specialty Clinic");
+  final _doctorController = TextEditingController();
+  final _clinicController = TextEditingController();
   final _dateController = TextEditingController(text: DateTime.now().toString().split(' ')[0]);
 
-  final _rightSphController = TextEditingController(text: "-2.25");
-  final _rightCylController = TextEditingController(text: "-0.75");
-  final _rightAxisController = TextEditingController(text: "180");
+  final _rightSphController = TextEditingController();
+  final _rightCylController = TextEditingController();
+  final _rightAxisController = TextEditingController();
 
-  final _leftSphController = TextEditingController(text: "-2.50");
-  final _leftCylController = TextEditingController(text: "-0.50");
-  final _leftAxisController = TextEditingController(text: "175");
+  final _leftSphController = TextEditingController();
+  final _leftCylController = TextEditingController();
+  final _leftAxisController = TextEditingController();
 
-  final _addPowerController = TextEditingController(text: "0.0");
-  final _pdController = TextEditingController(text: "63.0");
-  final _notesController = TextEditingController(text: "Anti-reflective coating recommended for computer use.");
+  final _addPowerController = TextEditingController();
+  final _pdController = TextEditingController();
+  final _notesController = TextEditingController();
 
   File? _imageFile;
   bool isOcrProcessing = false;
   bool showWarning = false;
   int uploadQueueCount = 0;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickAndProcessImage(ImageSource source) async {
+    File? file;
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: source,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        file = File(pickedFile.path);
+        setState(() {
+          _imageFile = file;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Could not open ${source == ImageSource.camera ? 'camera' : 'gallery'}: $e")),
+        );
+      }
+    }
+
+    if (file != null) {
+      await _runAiOcrScan(file);
+    }
+  }
 
   void _openCameraScanModal() {
     showModalBottomSheet(
@@ -89,30 +119,36 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          Positioned.fill(
-                            child: Padding(
-                              padding: const EdgeInsets.all(24),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
-                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
-                                      Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
-                                    ],
-                                  ),
-                                ],
+                          if (_imageFile != null)
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(18),
+                              child: Image.file(_imageFile!, fit: BoxFit.cover, width: double.infinity, height: double.infinity),
+                            )
+                          else
+                            Positioned.fill(
+                              child: Padding(
+                                padding: const EdgeInsets.all(24),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
+                                        Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(top: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), left: BorderSide(color: AppTheme.primary, width: 3)))),
+                                        Container(width: 24, height: 24, decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppTheme.primary, width: 3), right: BorderSide(color: AppTheme.primary, width: 3)))),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                          ),
                           if (isOcrProcessing)
                             Column(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -128,7 +164,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                               children: const [
                                 Icon(Icons.center_focus_strong_rounded, size: 64, color: Colors.white38),
                                 SizedBox(height: 12),
-                                Text("Tap Shutter Button to Snap", style: TextStyle(color: Colors.white60, fontSize: 13)),
+                                Text("Tap Shutter Button to Launch Camera", style: TextStyle(color: Colors.white60, fontSize: 13)),
                               ],
                             ),
                         ],
@@ -149,24 +185,8 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                           onTap: isOcrProcessing
                               ? null
                               : () async {
-                                  setModalState(() => isOcrProcessing = true);
-                                  final result = await AiOcrService.instance.extractPrescriptionData("camera_photo.jpg");
-                                  if (!mounted) return;
-                                  setState(() {
-                                    if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
-                                    if (result.rightCyl != null) _rightCylController.text = result.rightCyl.toString();
-                                    if (result.rightAxis != null) _rightAxisController.text = result.rightAxis.toString();
-                                    if (result.leftSph != null) _leftSphController.text = result.leftSph.toString();
-                                    if (result.leftCyl != null) _leftCylController.text = result.leftCyl.toString();
-                                    if (result.leftAxis != null) _leftAxisController.text = result.leftAxis.toString();
-                                    if (result.pd != null) _pdController.text = result.pd.toString();
-                                    if (result.doctorName.isNotEmpty) _doctorController.text = result.doctorName;
-                                    if (result.clinicName.isNotEmpty) _clinicController.text = result.clinicName;
-                                    if (result.notes.isNotEmpty) _notesController.text = result.notes;
-                                  });
-                                  setModalState(() => isOcrProcessing = false);
                                   Navigator.pop(ctx);
-                                  _showOcrConfirmationDialog(result);
+                                  await _pickAndProcessImage(ImageSource.camera);
                                 },
                           child: Container(
                             width: 64,
@@ -184,7 +204,7 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
                           icon: const Icon(Icons.photo_library_rounded, color: Colors.white70),
                           onPressed: () async {
                             Navigator.pop(ctx);
-                            _runAiOcrScan();
+                            await _pickAndProcessImage(ImageSource.gallery);
                           },
                         ),
                       ],
@@ -199,12 +219,26 @@ class _PrescriptionUploadScreenState extends State<PrescriptionUploadScreen> {
     );
   }
 
-  Future<void> _runAiOcrScan() async {
+  Future<void> _runAiOcrScan([File? imageFile]) async {
+    final targetFile = imageFile ?? _imageFile;
+    if (targetFile == null) return;
+
     setState(() => isOcrProcessing = true);
-    final imagePath = _imageFile?.path ?? "camera_scan.jpg";
-    final result = await AiOcrService.instance.extractPrescriptionData(imagePath);
+    final result = await AiOcrService.instance.extractPrescriptionData(targetFile.path);
     if (!mounted) return;
     setState(() => isOcrProcessing = false);
+
+    if (result.rightSph != null) _rightSphController.text = result.rightSph.toString();
+    if (result.rightCyl != null) _rightCylController.text = result.rightCyl.toString();
+    if (result.rightAxis != null) _rightAxisController.text = result.rightAxis.toString();
+    if (result.leftSph != null) _leftSphController.text = result.leftSph.toString();
+    if (result.leftCyl != null) _leftCylController.text = result.leftCyl.toString();
+    if (result.leftAxis != null) _leftAxisController.text = result.leftAxis.toString();
+    if (result.pd != null) _pdController.text = result.pd.toString();
+    if (result.doctorName.isNotEmpty) _doctorController.text = result.doctorName;
+    if (result.clinicName.isNotEmpty) _clinicController.text = result.clinicName;
+    if (result.notes.isNotEmpty) _notesController.text = result.notes;
+
     _showOcrConfirmationDialog(result);
   }
 

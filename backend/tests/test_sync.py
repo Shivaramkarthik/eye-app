@@ -1,9 +1,13 @@
 import pytest
 from httpx import AsyncClient
+from conftest import make_google_payload
 
 @pytest.mark.asyncio
-async def test_sync_push_idempotency(client: AsyncClient):
-    reg = await client.post("/api/v1/auth/register", json={"email": "sync_user@specz.co", "password": "Password123!"})
+async def test_sync_push_idempotency(client: AsyncClient, mock_google_verify):
+    mock_google_verify.return_value = make_google_payload(
+        sub="sync_user_sub", email="sync_user@specz.co", name="Sync User"
+    )
+    reg = await client.post("/api/v1/auth/google", json={"google_id_token": "token"})
     token = reg.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

@@ -6,10 +6,10 @@ class AiDoctorQuestionsCard extends StatelessWidget {
   final Function(String question)? onQuestionTap;
 
   const AiDoctorQuestionsCard({
-    Key? key,
+    super.key,
     required this.questions,
     this.onQuestionTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 
 class MedicalDisclaimerBanner extends StatelessWidget {
-  const MedicalDisclaimerBanner({Key? key}) : super(key: key);
+  const MedicalDisclaimerBanner({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -10,9 +10,9 @@ class MedicalDisclaimerBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.primary.withOpacity(0.06),
+        color: AppTheme.primary.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-        border: Border.all(color: AppTheme.primary.withOpacity(0.15)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.15)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -20,7 +20,7 @@ class MedicalDisclaimerBanner extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(6),
             decoration: BoxDecoration(
-              color: AppTheme.primary.withOpacity(0.12),
+              color: AppTheme.primary.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: Icon(

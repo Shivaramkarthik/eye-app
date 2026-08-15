@@ -2,8 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import '../utils/app_icons.dart';
 
-
-
 import 'package:printing/printing.dart';
 import '../models/medicine_model.dart';
 import '../models/prescription_model.dart';
@@ -26,7 +24,7 @@ class ReportViewerScreen extends StatefulWidget {
   final VoidCallback onUpgradeRequested;
 
   const ReportViewerScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.profile,
     required this.prescriptions,
@@ -36,7 +34,7 @@ class ReportViewerScreen extends StatefulWidget {
     required this.scoreExplanation,
     required this.doctorQuestions,
     required this.onUpgradeRequested,
-  }) : super(key: key);
+  });
 
   @override
   State<ReportViewerScreen> createState() => _ReportViewerScreenState();

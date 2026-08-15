@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
 import '../models/user_model.dart';
 import '../services/razorpay_service.dart';
@@ -9,10 +8,10 @@ class PremiumUpgradeScreen extends StatefulWidget {
   final VoidCallback onUpgraded;
 
   const PremiumUpgradeScreen({
-    Key? key,
+    super.key,
     required this.user,
     required this.onUpgraded,
-  }) : super(key: key);
+  });
 
   @override
   State<PremiumUpgradeScreen> createState() => _PremiumUpgradeScreenState();
@@ -69,9 +68,9 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.4), width: 2),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.4), width: 2),
                       ),
                       child: const Icon(Icons.workspace_premium_rounded, size: 48, color: Colors.white),
                     ),
@@ -84,7 +83,7 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
                     Text(
                       "Manage your entire family's vision health in one app",
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14, color: Colors.white.withOpacity(0.9)),
+                      style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.9)),
                     ),
                   ],
                 ),
@@ -167,7 +166,7 @@ class _PremiumUpgradeScreenState extends State<PremiumUpgradeScreen> {
           Container(
             padding: const EdgeInsets.all(4),
             decoration: BoxDecoration(
-              color: AppTheme.success.withOpacity(0.12),
+              color: AppTheme.success.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(Icons.check_rounded, size: 16, color: AppTheme.success),

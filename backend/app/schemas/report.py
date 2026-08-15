@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class ReportCreate(BaseModel):
     profile_id: str
@@ -14,6 +15,7 @@ class ReportCreate(BaseModel):
     score_explanation_snapshot: Optional[str] = None
     ai_summary_snapshot: Optional[str] = None
     doctor_questions_snapshot: Optional[str] = None
+
 
 class ReportOut(BaseModel):
     id: str
@@ -31,5 +33,4 @@ class ReportOut(BaseModel):
     doctor_questions_snapshot: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

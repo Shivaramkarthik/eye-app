@@ -1,11 +1,7 @@
 from app.schemas.auth import (
-    RegisterRequest,
-    LoginRequest,
+    GoogleAuthRequest,
     TokenResponse,
     RefreshTokenRequest,
-    PasswordResetRequest,
-    PasswordResetConfirmRequest,
-    AccountDeleteRequest,
 )
 from app.schemas.user import UserOut, UserUpdate
 from app.schemas.profile import ProfileCreate, ProfileUpdate, ProfileOut
@@ -37,13 +33,9 @@ from app.schemas.ai import (
 )
 
 __all__ = [
-    "RegisterRequest",
-    "LoginRequest",
+    "GoogleAuthRequest",
     "TokenResponse",
     "RefreshTokenRequest",
-    "PasswordResetRequest",
-    "PasswordResetConfirmRequest",
-    "AccountDeleteRequest",
     "UserOut",
     "UserUpdate",
     "ProfileCreate",

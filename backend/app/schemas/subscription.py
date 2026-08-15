@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Optional, Dict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
 
 class RazorpayOrderCreate(BaseModel):
-    plan: str = "plus" # free / plus
+    plan: str = "plus"  # free / plus
     billing_period: str = "monthly"
+
 
 class RazorpayOrderResponse(BaseModel):
     order_id: str
@@ -12,11 +14,13 @@ class RazorpayOrderResponse(BaseModel):
     currency: str = "INR"
     key_id: str
 
+
 class PaymentVerifyRequest(BaseModel):
     razorpay_order_id: str
     razorpay_payment_id: str
     razorpay_signature: str
     plan: str = "plus"
+
 
 class EntitlementOut(BaseModel):
     user_id: str
@@ -25,6 +29,7 @@ class EntitlementOut(BaseModel):
     max_profiles: int
     features: Dict[str, Any]
     expires_at: Optional[datetime] = None
+
 
 class SubscriptionOut(BaseModel):
     id: str
@@ -36,5 +41,4 @@ class SubscriptionOut(BaseModel):
     expires_at: Optional[datetime] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

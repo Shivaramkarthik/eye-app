@@ -7,12 +7,12 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(String, primary_key=True, index=True)
+    google_sub = Column(String, unique=True, index=True, nullable=True)
     email = Column(String, unique=True, index=True, nullable=False)
-    phone = Column(String, nullable=True)
-    password_hash = Column(String, nullable=True)
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     display_name = Column(String, nullable=True)
+    avatar_url = Column(String, nullable=True)
     plan = Column(String, nullable=False, default="free")
     account_status = Column(String, nullable=False, default="ACTIVE")
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False)

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -16,6 +17,7 @@ class NotificationService {
     if (_initialized) return;
 
     tz.initializeTimeZones();
+    _detectAndSetLocalTimezone();
 
     const AndroidInitializationSettings androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const DarwinInitializationSettings iosSettings = DarwinInitializationSettings(
@@ -43,7 +45,71 @@ class NotificationService {
       },
     );
 
+    // Create High-Priority Alarm Notification Channel for Eye Drop Alarms
+    final androidImplementation = _notificationsPlugin
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+    if (androidImplementation != null) {
+      await androidImplementation.requestNotificationsPermission();
+      await androidImplementation.requestExactAlarmsPermission();
+
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'specz_medication_reminders',
+        'Eye Drop & Medicine Alarms',
+        description: 'Wakeup-style persistent eye drop alarm clock reminders',
+        importance: Importance.max,
+        playSound: true,
+        enableVibration: true,
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        sound: RawResourceAndroidNotificationSound('notification_sound'),
+      );
+
+      await androidImplementation.createNotificationChannel(channel);
+    }
+
     _initialized = true;
+  }
+
+  void _detectAndSetLocalTimezone() {
+    try {
+      final now = DateTime.now();
+      final offset = now.timeZoneOffset;
+      for (var location in tz.timeZoneDatabase.locations.values) {
+        final tzNow = tz.TZDateTime.now(location);
+        if (tzNow.timeZoneOffset == offset) {
+          tz.setLocalLocation(location);
+          return;
+        }
+      }
+    } catch (_) {}
+  }
+
+  Future<void> showImmediateTestNotification(MedicineModel medicine) async {
+    await initialize();
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+      'specz_medication_reminders',
+      'Eye Drop & Medicine Alarms',
+      channelDescription: 'Wakeup-style persistent eye drop alarm clock reminders',
+      importance: Importance.max,
+      priority: Priority.high,
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
+      sound: const RawResourceAndroidNotificationSound('notification_sound'),
+      playSound: true,
+      enableVibration: true,
+      additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: loops sound like alarm clock!
+    );
+    final NotificationDetails platformDetails = NotificationDetails(
+      android: androidDetails,
+      iOS: const DarwinNotificationDetails(presentAlert: true, presentSound: true),
+    );
+    await _notificationsPlugin.show(
+      DateTime.now().millisecondsSinceEpoch % 10000,
+      '⏰ EYE DROP ALARM — ${medicine.name}',
+      'Time to take: ${medicine.dosage} (${medicine.type})',
+      platformDetails,
+    );
   }
 
   Future<void> _handleNotificationAction(String payload, String actionId) async {
@@ -99,25 +165,30 @@ class NotificationService {
 
     final notificationId = (medicine.id.hashCode + timeStr.hashCode).abs() % 100000;
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+    final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
       'specz_medication_reminders',
-      'Eye Drop & Medicine Reminders',
-      channelDescription: 'OS-level reliable scheduled eye-drop reminders',
+      'Eye Drop & Medicine Alarms',
+      channelDescription: 'Wakeup-style persistent eye drop alarm clock reminders',
       importance: Importance.max,
       priority: Priority.high,
-      sound: RawResourceAndroidNotificationSound('notification_sound'),
+      category: AndroidNotificationCategory.alarm,
+      audioAttributesUsage: AudioAttributesUsage.alarm,
+      fullScreenIntent: true,
+      visibility: NotificationVisibility.public,
+      sound: const RawResourceAndroidNotificationSound('notification_sound'),
       playSound: true,
       enableVibration: true,
+      additionalFlags: Int32List.fromList([4]), // FLAG_INSISTENT: loops sound like alarm clock!
       actions: <AndroidNotificationAction>[
-        AndroidNotificationAction('TAKE', 'Take Now', showsUserInterface: true),
-        AndroidNotificationAction('SNOOZE', 'Snooze 15m', showsUserInterface: false),
-        AndroidNotificationAction('SKIP', 'Skip', showsUserInterface: false),
+        const AndroidNotificationAction('TAKE', 'Take Now', showsUserInterface: true),
+        const AndroidNotificationAction('SNOOZE', 'Snooze 15m', showsUserInterface: false),
+        const AndroidNotificationAction('SKIP', 'Skip', showsUserInterface: false),
       ],
     );
 
-    const NotificationDetails platformDetails = NotificationDetails(
+    final NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: DarwinNotificationDetails(
+      iOS: const DarwinNotificationDetails(
         presentAlert: true,
         presentBadge: true,
         presentSound: true,
@@ -126,23 +197,55 @@ class NotificationService {
 
     final payload = "${medicine.id}|$timeStr";
 
-    try {
-      final tzLocation = tz.local;
-      final tzScheduled = tz.TZDateTime.from(scheduledDate, tzLocation);
+    final tzScheduled = tz.TZDateTime(
+      tz.local,
+      scheduledDate.year,
+      scheduledDate.month,
+      scheduledDate.day,
+      scheduledDate.hour,
+      scheduledDate.minute,
+    );
 
+    try {
       await _notificationsPlugin.zonedSchedule(
         notificationId,
-        'Eye Drop Reminder — ${medicine.name}',
+        '⏰ EYE DROP ALARM — ${medicine.name}',
         'Time to take: ${medicine.dosage} (${medicine.type})',
         tzScheduled,
         platformDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        androidScheduleMode: AndroidScheduleMode.alarmClock,
         uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time,
         payload: payload,
       );
     } catch (_) {
-      // Fallback show notification immediately if exact alarm fails
+      try {
+        await _notificationsPlugin.zonedSchedule(
+          notificationId,
+          '⏰ EYE DROP ALARM — ${medicine.name}',
+          'Time to take: ${medicine.dosage} (${medicine.type})',
+          tzScheduled,
+          platformDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          matchDateTimeComponents: DateTimeComponents.time,
+          payload: payload,
+        );
+      } catch (_) {
+        try {
+          await _notificationsPlugin.zonedSchedule(
+            notificationId,
+            '⏰ EYE DROP ALARM — ${medicine.name}',
+            'Time to take: ${medicine.dosage} (${medicine.type})',
+            tzScheduled,
+            platformDetails,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+            matchDateTimeComponents: DateTimeComponents.time,
+            payload: payload,
+          );
+        } catch (_) {}
+      }
     }
   }
 
@@ -159,19 +262,41 @@ class NotificationService {
       priority: Priority.high,
     );
 
-    final tzLocation = tz.local;
-    final tzScheduled = tz.TZDateTime.from(scheduledDate, tzLocation);
-
-    await _notificationsPlugin.zonedSchedule(
-      notificationId,
-      'Snoozed Eye Drop Reminder',
-      'Your snoozed eye drop reminder is due now!',
-      tzScheduled,
-      const NotificationDetails(android: androidDetails),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      payload: "$medId|$timeKey",
+    final tzScheduled = tz.TZDateTime(
+      tz.local,
+      scheduledDate.year,
+      scheduledDate.month,
+      scheduledDate.day,
+      scheduledDate.hour,
+      scheduledDate.minute,
+      scheduledDate.second,
     );
+
+    try {
+      await _notificationsPlugin.zonedSchedule(
+        notificationId,
+        'Snoozed Eye Drop Reminder',
+        'Your snoozed eye drop reminder is due now!',
+        tzScheduled,
+        const NotificationDetails(android: androidDetails),
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        payload: "$medId|$timeKey",
+      );
+    } catch (_) {
+      try {
+        await _notificationsPlugin.zonedSchedule(
+          notificationId,
+          'Snoozed Eye Drop Reminder',
+          'Your snoozed eye drop reminder is due now!',
+          tzScheduled,
+          const NotificationDetails(android: androidDetails),
+          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+          payload: "$medId|$timeKey",
+        );
+      } catch (_) {}
+    }
   }
 
   Future<void> cancelMedicationReminders(MedicineModel medicine) async {

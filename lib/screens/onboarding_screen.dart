@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../utils/app_icons.dart';
 import '../utils/app_theme.dart';
 import '../models/profile_model.dart';
 import '../models/user_model.dart';
@@ -9,7 +8,7 @@ class OnboardingScreen extends StatefulWidget {
   final UserModel user;
   final Function(ProfileModel) onProfileCreated;
 
-  const OnboardingScreen({Key? key, required this.user, required this.onProfileCreated}) : super(key: key);
+  const OnboardingScreen({super.key, required this.user, required this.onProfileCreated});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -198,7 +197,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 14),
                 DropdownButtonFormField<String>(
-                  value: relationship,
+                  initialValue: relationship,
                   decoration: AppTheme.inputDecoration(label: "Relationship", prefixIcon: Icons.family_restroom_rounded),
                   items: ['Self', 'Child', 'Spouse', 'Parent', 'Other']
                       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
@@ -298,7 +297,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       return FilterChip(
                         label: Text(symp),
                         selected: isSel,
-                        selectedColor: AppTheme.primary.withOpacity(0.15),
+                        selectedColor: AppTheme.primary.withValues(alpha: 0.15),
                         backgroundColor: Colors.white,
                         labelStyle: TextStyle(color: isSel ? AppTheme.primary : AppTheme.textPrimary, fontWeight: FontWeight.w600),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isSel ? AppTheme.primary : AppTheme.border)),
@@ -319,7 +318,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     const Text("Blurred vision follow-up:", style: TextStyle(fontWeight: FontWeight.w700, color: AppTheme.textPrimary)),
                     const SizedBox(height: 10),
                     DropdownButtonFormField<String>(
-                      value: blurredVisionType ?? 'Both',
+                      initialValue: blurredVisionType ?? 'Both',
                       decoration: AppTheme.inputDecoration(label: "Difficulty seeing..."),
                       items: ['Difficulty seeing nearby objects', 'Difficulty seeing distant objects', 'Difficulty seeing both near and far', 'Not sure']
                           .map((b) => DropdownMenuItem(value: b, child: Text(b, style: const TextStyle(fontSize: 13))))

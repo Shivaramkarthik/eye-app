@@ -41,7 +41,7 @@ class DatabaseService {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) async {
         await DatabaseMigrationManager.createV2Schema(db);
       },
@@ -49,6 +49,15 @@ class DatabaseService {
         if (oldVersion < 2) {
           await DatabaseMigrationManager.createV2Schema(db);
           await DatabaseMigrationManager.migrateFromV1ToV2(db);
+        }
+        if (oldVersion < 3) {
+          // Add Google Sign-In fields to users table
+          try {
+            await db.execute('ALTER TABLE users ADD COLUMN google_sub TEXT');
+          } catch (_) {} // Column may already exist
+          try {
+            await db.execute('ALTER TABLE users ADD COLUMN avatar_url TEXT');
+          } catch (_) {} // Column may already exist
         }
       },
     );
@@ -77,6 +86,12 @@ class DatabaseService {
   Future<void> saveUser(UserModel user) async {
     final dao = await userDao;
     await dao.insertUser(user);
+  }
+
+  /// Returns the most recently created local user (for session restore without backend).
+  Future<UserModel?> getLastUser() async {
+    final dao = await userDao;
+    return dao.getLastUser();
   }
 
   Future<void> updateUserPlan(String userId, String plan, String status, String? subId, String? nextRenewal) async {

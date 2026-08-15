@@ -2,6 +2,8 @@ class UserModel {
   final String id;
   final String email;
   final String name;
+  final String? avatarUrl;
+  final String? googleSub;
   final String plan; // 'free' | 'plus'
   final String? subscriptionId;
   final String status; // 'free' | 'active' | 'expired' | 'cancelled'
@@ -12,6 +14,8 @@ class UserModel {
     required this.id,
     required this.email,
     required this.name,
+    this.avatarUrl,
+    this.googleSub,
     this.plan = 'free',
     this.subscriptionId,
     this.status = 'free',
@@ -27,6 +31,8 @@ class UserModel {
       'id': id,
       'email': email,
       'name': name,
+      'avatarUrl': avatarUrl,
+      'googleSub': googleSub,
       'plan': plan,
       'subscriptionId': subscriptionId,
       'status': status,
@@ -39,7 +45,9 @@ class UserModel {
     return UserModel(
       id: map['id'] ?? '',
       email: map['email'] ?? '',
-      name: map['name'] ?? 'Eye Care User',
+      name: map['name'] ?? map['display_name'] ?? 'Eye Care User',
+      avatarUrl: map['avatarUrl'] ?? map['avatar_url'],
+      googleSub: map['googleSub'] ?? map['google_sub'],
       plan: map['plan'] ?? 'free',
       subscriptionId: map['subscriptionId'],
       status: map['status'] ?? 'free',

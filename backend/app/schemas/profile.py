@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
+
 
 class ProfileCreate(BaseModel):
     name: str = Field(..., min_length=1)
@@ -12,6 +13,7 @@ class ProfileCreate(BaseModel):
     blurred_vision_type: Optional[str] = None
     symptoms: List[str] = []
 
+
 class ProfileUpdate(BaseModel):
     name: Optional[str] = None
     dob: Optional[str] = None
@@ -22,6 +24,7 @@ class ProfileUpdate(BaseModel):
     blurred_vision_type: Optional[str] = None
     symptoms: Optional[List[str]] = None
     archived: Optional[int] = None
+
 
 class ProfileOut(BaseModel):
     id: str
@@ -38,5 +41,4 @@ class ProfileOut(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

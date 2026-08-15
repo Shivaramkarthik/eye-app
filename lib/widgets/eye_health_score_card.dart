@@ -7,11 +7,11 @@ class EyeHealthScoreCard extends StatefulWidget {
   final VoidCallback? onTap;
 
   const EyeHealthScoreCard({
-    Key? key,
+    super.key,
     required this.score,
     required this.explanation,
     this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   State<EyeHealthScoreCard> createState() => _EyeHealthScoreCardState();
@@ -99,7 +99,7 @@ class _EyeHealthScoreCardState extends State<EyeHealthScoreCard>
                               strokeWidth: 6,
                               backgroundColor: Colors.transparent,
                               valueColor: AlwaysStoppedAnimation(
-                                Colors.white.withOpacity(0.2),
+                                Colors.white.withValues(alpha: 0.2),
                               ),
                             ),
                           ),
@@ -133,7 +133,7 @@ class _EyeHealthScoreCardState extends State<EyeHealthScoreCard>
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 0.7),
                                 ),
                               ),
                             ],
@@ -168,7 +168,7 @@ class _EyeHealthScoreCardState extends State<EyeHealthScoreCard>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Text(
@@ -189,7 +189,7 @@ class _EyeHealthScoreCardState extends State<EyeHealthScoreCard>
                         style: TextStyle(
                           fontSize: 12,
                           height: 1.4,
-                          color: Colors.white.withOpacity(0.85),
+                          color: Colors.white.withValues(alpha: 0.85),
                         ),
                       ),
                     ],

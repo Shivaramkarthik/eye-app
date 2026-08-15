@@ -21,11 +21,11 @@ class AiChatScreen extends StatefulWidget {
   final String? initialQuestion;
 
   const AiChatScreen({
-    Key? key,
+    super.key,
     required this.user,
     this.profile,
     this.initialQuestion,
-  }) : super(key: key);
+  });
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
@@ -130,7 +130,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text("AI Eye Assistant", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                Text("Specz.co Intelligence", style: TextStyle(fontSize: 11, color: AppTheme.textSecondary.withOpacity(0.8))),
+                Text("Specz.co Intelligence", style: TextStyle(fontSize: 11, color: AppTheme.textSecondary.withValues(alpha: 0.8))),
               ],
             ),
           ],

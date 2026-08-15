@@ -1,10 +1,14 @@
 import pytest
 from httpx import AsyncClient
+from conftest import make_google_payload
 
 @pytest.mark.asyncio
-async def test_prescription_preserves_null_cyl(client: AsyncClient):
-    # Setup User & Profile
-    reg = await client.post("/api/v1/auth/register", json={"email": "presc_user@specz.co", "password": "Password123!"})
+async def test_prescription_preserves_null_cyl(client: AsyncClient, mock_google_verify):
+    # Setup User via Google Sign-In
+    mock_google_verify.return_value = make_google_payload(
+        sub="presc_user_sub", email="presc_user@specz.co", name="Presc User"
+    )
+    reg = await client.post("/api/v1/auth/google", json={"google_id_token": "token"})
     token = reg.json()["access_token"]
     headers = {"Authorization": f"Bearer {token}"}
 

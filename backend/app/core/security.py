@@ -1,19 +1,42 @@
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import jwt
-from passlib.context import CryptContext
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 from app.core.config import settings
 
-# Password hashing context (Argon2 with Bcrypt fallback)
-pwd_context = CryptContext(schemes=["argon2", "bcrypt"], deprecated="auto")
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies a plain text password against a hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_google_id_token(token: str) -> Dict[str, Any]:
+    """Verifies a Google ID token against Google's servers.
+    
+    Returns the verified token payload containing:
+    - sub: Google's unique user identifier
+    - email: User's email address
+    - email_verified: Whether the email is verified
+    - name: User's display name
+    - picture: URL to user's profile picture
+    
+    Raises ValueError if the token is invalid, expired, or from wrong audience.
+    """
+    try:
+        payload = id_token.verify_oauth2_token(
+            token,
+            google_requests.Request(),
+            settings.GOOGLE_CLIENT_ID,
+        )
+        
+        # Verify the issuer
+        if payload.get("iss") not in ("accounts.google.com", "https://accounts.google.com"):
+            raise ValueError("Invalid token issuer")
+        
+        # Ensure email is verified
+        if not payload.get("email_verified", False):
+            raise ValueError("Google email is not verified")
+        
+        return payload
+    except Exception as e:
+        raise ValueError(f"Invalid Google ID token: {str(e)}")
 
-def get_password_hash(password: str) -> str:
-    """Hashes a password using Argon2/Bcrypt."""
-    return pwd_context.hash(password)
 
 def create_access_token(subject: str, expires_delta: Optional[timedelta] = None, extra_claims: Optional[Dict[str, Any]] = None) -> str:
     """Generates a short-lived JWT Access Token."""

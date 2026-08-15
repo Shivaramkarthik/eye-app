@@ -5,7 +5,7 @@ import '../utils/app_theme.dart';
 class AcademicBwChart extends StatelessWidget {
   final List<PrescriptionModel> prescriptions;
 
-  const AcademicBwChart({Key? key, required this.prescriptions}) : super(key: key);
+  const AcademicBwChart({super.key, required this.prescriptions});
 
   @override
   Widget build(BuildContext context) {
@@ -203,12 +203,12 @@ class _ModernGridPainter extends CustomPainter {
 
     // Draw points with glow
     for (final pt in rightPoints) {
-      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFF0A6B7C).withOpacity(0.15));
+      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFF0A6B7C).withValues(alpha: 0.15));
       canvas.drawCircle(pt, 4, Paint()..color = Colors.white);
       canvas.drawCircle(pt, 3, Paint()..color = const Color(0xFF0A6B7C));
     }
     for (final pt in leftPoints) {
-      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFFFFB74D).withOpacity(0.15));
+      canvas.drawCircle(pt, 5, Paint()..color = const Color(0xFFFFB74D).withValues(alpha: 0.15));
       canvas.drawCircle(pt, 4, Paint()..color = Colors.white);
       canvas.drawCircle(pt, 3, Paint()..color = const Color(0xFFFFB74D));
     }

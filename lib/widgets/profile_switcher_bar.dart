@@ -12,13 +12,13 @@ class ProfileSwitcherBar extends StatelessWidget {
   final VoidCallback onAddProfile;
 
   const ProfileSwitcherBar({
-    Key? key,
+    super.key,
     required this.profiles,
     required this.selectedProfile,
     required this.user,
     required this.onSelectProfile,
     required this.onAddProfile,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +39,7 @@ class ProfileSwitcherBar extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withOpacity(0.1),
+                      color: AppTheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(LucideIcons.users, size: 14, color: AppTheme.primary),
@@ -111,12 +111,12 @@ class ProfileSwitcherBar extends StatelessWidget {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected
-                                  ? Colors.white.withOpacity(0.2)
-                                  : AppTheme.primary.withOpacity(0.1),
+                                  ? Colors.white.withValues(alpha: 0.2)
+                                  : AppTheme.primary.withValues(alpha: 0.1),
                               border: Border.all(
                                 color: isSelected
-                                    ? Colors.white.withOpacity(0.4)
-                                    : AppTheme.primary.withOpacity(0.2),
+                                    ? Colors.white.withValues(alpha: 0.4)
+                                    : AppTheme.primary.withValues(alpha: 0.2),
                                 width: 1.5,
                               ),
                             ),
@@ -146,7 +146,7 @@ class ProfileSwitcherBar extends StatelessWidget {
                                   fontSize: 11,
                                   fontWeight: FontWeight.w500,
                                   color: isSelected
-                                      ? Colors.white.withOpacity(0.8)
+                                      ? Colors.white.withValues(alpha: 0.8)
                                       : AppTheme.textSecondary,
                                 ),
                               ),
@@ -164,10 +164,10 @@ class ProfileSwitcherBar extends StatelessWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: canAdd ? AppTheme.success.withOpacity(0.08) : AppTheme.error.withOpacity(0.08),
+                    color: canAdd ? AppTheme.success.withValues(alpha: 0.08) : AppTheme.error.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
                     border: Border.all(
-                      color: canAdd ? AppTheme.success.withOpacity(0.3) : AppTheme.error.withOpacity(0.3),
+                      color: canAdd ? AppTheme.success.withValues(alpha: 0.3) : AppTheme.error.withValues(alpha: 0.3),
                       style: BorderStyle.solid,
                     ),
                   ),
@@ -179,7 +179,7 @@ class ProfileSwitcherBar extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: canAdd ? AppTheme.success.withOpacity(0.5) : AppTheme.error.withOpacity(0.5),
+                            color: canAdd ? AppTheme.success.withValues(alpha: 0.5) : AppTheme.error.withValues(alpha: 0.5),
                             width: 1.5,
                             style: BorderStyle.solid,
                           ),
