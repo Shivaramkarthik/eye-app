@@ -60,6 +60,8 @@ jobs:
         with:
           files: build/dist/Specz-v1.0.0-rc1-release.apk
           name: Specz.co ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          make_latest: true
           body: |
             ## Specz.co Release Candidate
             - **Downloadable Android APK**: `Specz-v1.0.0-rc1-release.apk`
