@@ -8,6 +8,9 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     name: Build Specz.co Android APK
@@ -27,12 +30,11 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
           channel: 'stable'
           cache: true
 
-      - name: Verify Flutter & Doctor
-        run: flutter doctor -v
+      - name: Verify Flutter Version
+        run: flutter --version
 
       - name: Install Flutter Dependencies
         run: flutter pub get
@@ -40,7 +42,7 @@ jobs:
       - name: Build Android Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Rename APK for Distribution
+      - name: Prepare APK Output
         run: |
           mkdir -p build/dist
           cp build/app/outputs/flutter-apk/app-release.apk build/dist/Specz-v1.0.0-rc1-release.apk
@@ -52,7 +54,7 @@ jobs:
           path: build/dist/Specz-v1.0.0-rc1-release.apk
           retention-days: 30
 
-      - name: Create Release (on Tag)
+      - name: Create GitHub Release (on Tag)
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
