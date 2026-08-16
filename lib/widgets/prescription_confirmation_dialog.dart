@@ -179,10 +179,11 @@ class _PrescriptionConfirmationDialogState extends State<PrescriptionConfirmatio
                 color: Colors.amber.shade50,
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(color: Colors.amber.shade300),
+              ),
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(LucideIcons.alertTriangle, size: 16, color: Color(0xFFD97706)),
+                  Icon(Icons.warning_amber_rounded, size: 16, color: Color(0xFFD97706)),
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
