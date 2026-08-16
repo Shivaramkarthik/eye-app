@@ -16,7 +16,7 @@ call flutter pub get
 
 REM Step 3: Build APK
 echo [3/3] Compiling Release APK...
-call flutter build apk --release --no-tree-shake-icons
+call flutter build apk --release --no-tree-shake-icons --android-skip-build-dependency-validation
 
 if %ERRORLEVEL% NEQ 0 (
     echo [ERROR] Flutter APK build failed! Check errors above.
