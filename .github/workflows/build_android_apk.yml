@@ -42,16 +42,11 @@ jobs:
       - name: Build Android Release APK
         run: flutter build apk --release --no-tree-shake-icons
 
-      - name: Prepare APK Output
-        run: |
-          mkdir -p build/dist
-          cp build/app/outputs/flutter-apk/app-release.apk build/dist/Specz-v1.0.0-rc1-release.apk
-
       - name: Upload Downloadable APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: Specz-Android-Release-APK
-          path: build/dist/Specz-v1.0.0-rc1-release.apk
+          path: build/app/outputs/flutter-apk/*.apk
           retention-days: 30
 
       - name: Create GitHub Release (on Tag)
@@ -59,13 +54,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         continue-on-error: true
         with:
-          files: build/dist/Specz-v1.0.0-rc1-release.apk
+          files: build/app/outputs/flutter-apk/*.apk
           name: Specz.co ${{ github.ref_name }}
           tag_name: ${{ github.ref_name }}
           make_latest: true
           body: |
             ## Specz.co Release Candidate
-            - **Downloadable Android APK**: `Specz-v1.0.0-rc1-release.apk`
+            - **Downloadable Android APK**: `app-release.apk`
             - Built with Flutter & Java 17
             - Multi-profile eye care companion, OCR prescription extraction, persistent eye-drop alarms, and deterministic Vision Care Score.
           draft: false
